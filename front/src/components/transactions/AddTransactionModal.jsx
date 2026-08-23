@@ -1,18 +1,8 @@
 import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
-import {
-  expenseCategories,
-  incomeCategories,
-  transferCategories,
-} from '../../data/mockData.js';
+import { incomeCategories, transferCategories } from '../../data/mockData.js';
 import { toInputDate } from '../../utils/dates.js';
-
-function categoriesForType(type) {
-  if (type === 'income') return incomeCategories;
-  if (type === 'transfer') return transferCategories;
-  return expenseCategories;
-}
 
 export default function AddTransactionModal() {
   const { isAddOpen, closeAdd } = useFinance();
@@ -24,18 +14,25 @@ export default function AddTransactionModal() {
   );
 }
 
+function categoriesForType(type, data) {
+  if (type === 'income') return incomeCategories;
+  if (type === 'transfer') return transferCategories;
+  return data.categories.map((category) => category.name);
+}
+
 function AddTransactionForm() {
   const { data, addTransaction } = useFinance();
+  const expenseNames = data.categories.map((category) => category.name);
   const [form, setForm] = useState({
     type: 'expense',
     amount: '',
-    category: expenseCategories[0],
-    accountId: 'daily',
+    category: expenseNames[0] || '',
+    accountId: data.accounts[0]?.id || '',
     note: '',
     date: toInputDate(),
   });
 
-  const categories = categoriesForType(form.type);
+  const categories = categoriesForType(form.type, data);
   const saveLabel =
     form.type === 'income'
       ? 'Save income'
@@ -51,7 +48,7 @@ function AddTransactionForm() {
     setForm((prev) => ({
       ...prev,
       type,
-      category: categoriesForType(type)[0],
+      category: categoriesForType(type, data)[0] || '',
     }));
   }
 
@@ -104,12 +101,18 @@ function AddTransactionForm() {
         <select
           value={form.category}
           onChange={(event) => updateField('category', event.target.value)}
+          required
+          disabled={categories.length === 0}
         >
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
+          {categories.length === 0 ? (
+            <option value="">Add a category first</option>
+          ) : (
+            categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))
+          )}
         </select>
       </label>
 
@@ -147,7 +150,11 @@ function AddTransactionForm() {
         />
       </label>
 
-      <button type="submit" className="btn btn-primary btn-block">
+      <button
+        type="submit"
+        className="btn btn-primary btn-block"
+        disabled={form.type === 'expense' && categories.length === 0}
+      >
         {saveLabel}
       </button>
     </form>

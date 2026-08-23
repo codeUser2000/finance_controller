@@ -117,6 +117,96 @@ export function FinanceProvider({ children }) {
     });
   }
 
+  function addCategory(name) {
+    const trimmed = name.trim();
+    if (!trimmed) return 'Enter a category name.';
+
+    const exists = data.categories.some(
+      (item) => item.name.toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (exists) return 'That category already exists.';
+
+    setData((prev) => ({
+      ...prev,
+      categories: [
+        ...prev.categories,
+        { id: createId(), name: trimmed, budget: 0, spent: 0 },
+      ],
+    }));
+
+    return null;
+  }
+
+  function addBudgetItem({ categoryId, name, budget }) {
+    const numericBudget = Number(budget);
+    if (Number.isNaN(numericBudget) || numericBudget < 0) {
+      return 'Enter a valid budget amount.';
+    }
+
+    if (categoryId) {
+      const category = data.categories.find((item) => item.id === categoryId);
+      if (!category) return 'Choose a category.';
+      updateCategoryBudget(categoryId, numericBudget);
+      return null;
+    }
+
+    const trimmed = name.trim();
+    if (!trimmed) return 'Enter a category name.';
+
+    const existing = data.categories.find(
+      (item) => item.name.toLowerCase() === trimmed.toLowerCase(),
+    );
+
+    if (existing) {
+      updateCategoryBudget(existing.id, numericBudget);
+      return null;
+    }
+
+    setData((prev) => {
+      const categories = [
+        ...prev.categories,
+        { id: createId(), name: trimmed, budget: numericBudget, spent: 0 },
+      ];
+      const spendingBudget = categories.reduce((sum, item) => sum + item.budget, 0);
+      return { ...prev, categories, spendingBudget };
+    });
+
+    return null;
+  }
+
+  function addAccount({ name, kind, balance, note }) {
+    const trimmed = name.trim();
+    if (!trimmed) return 'Enter an account name.';
+
+    const exists = data.accounts.some(
+      (item) => item.name.toLowerCase() === trimmed.toLowerCase(),
+    );
+    if (exists) return 'That account already exists.';
+
+    const numericBalance = Number(balance);
+    if (Number.isNaN(numericBalance)) return 'Enter a valid opening balance.';
+
+    const accountKind = kind === 'savings' ? 'savings' : 'spending';
+
+    setData((prev) => ({
+      ...prev,
+      accounts: [
+        ...prev.accounts,
+        {
+          id: createId(),
+          name: trimmed,
+          balance: numericBalance,
+          kind: accountKind,
+          note:
+            note?.trim() ||
+            (accountKind === 'savings' ? 'Savings account' : 'Spending account'),
+        },
+      ],
+    }));
+
+    return null;
+  }
+
   return (
     <FinanceContext.Provider
       value={{
@@ -127,6 +217,9 @@ export function FinanceProvider({ children }) {
         closeAdd,
         addTransaction,
         updateCategoryBudget,
+        addCategory,
+        addBudgetItem,
+        addAccount,
         getAccountName,
       }}
     >
