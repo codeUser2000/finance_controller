@@ -9,7 +9,7 @@ import AddCategoryModal from '../components/budget/AddCategoryModal.jsx';
 import AddBudgetItemModal from '../components/budget/AddBudgetItemModal.jsx';
 
 export default function Budget() {
-  const { data, remaining } = useFinance();
+  const { data, remaining, deleteCategory } = useFinance();
   const [editing, setEditing] = useState(null);
   const [addingCategory, setAddingCategory] = useState(false);
   const [addingBudgetItem, setAddingBudgetItem] = useState(false);
@@ -47,22 +47,27 @@ export default function Budget() {
       </header>
 
       <section className="card">
-        <p className="spendable-label">Total monthly budget</p>
-        <p className="spendable-amount amount">{formatMoney(data.spendingBudget)}</p>
+        <p className="spendable-label">Left this month</p>
+        <p className={`spendable-amount amount ${remaining < 0 ? 'amount-danger' : ''}`}>
+          {formatMoney(remaining)}
+        </p>
+        <p className="spendable-meta">
+          of {formatMoney(data.spendingBudget)} you started with
+        </p>
         <div className="summary-grid">
+          <div className="stat">
+            <div className="stat-label">Had</div>
+            <div className="stat-value">{formatMoney(data.spendingBudget)}</div>
+          </div>
           <div className="stat">
             <div className="stat-label">Spent</div>
             <div className="stat-value">{formatMoney(data.spent)}</div>
           </div>
           <div className="stat">
-            <div className="stat-label">Remaining</div>
+            <div className="stat-label">Left</div>
             <div className={`stat-value ${remaining < 0 ? 'amount-danger' : ''}`}>
               {formatMoney(remaining)}
             </div>
-          </div>
-          <div className="stat">
-            <div className="stat-label">Categories</div>
-            <div className="stat-value">{data.categories.length}</div>
           </div>
         </div>
       </section>
@@ -93,21 +98,34 @@ export default function Budget() {
                       {category.budget === 0
                         ? 'No budget set'
                         : leftover < 0
-                          ? `${formatMoney(Math.abs(leftover))} over`
-                          : `${formatMoney(leftover)} left`}
+                          ? `${formatMoney(Math.abs(leftover))} over of ${formatMoney(category.budget)}`
+                          : `${formatMoney(leftover)} left of ${formatMoney(category.budget)}`}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-small"
-                    onClick={() => setEditing(category)}
-                  >
-                    Edit
-                  </button>
+                  <div className="account-actions">
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-small"
+                      onClick={() => setEditing(category)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-small"
+                      onClick={async () => {
+                        const confirmed = window.confirm(`Delete ${category.name}?`);
+                        if (!confirmed) return;
+                        await deleteCategory(category.id);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
                 <div className="budget-row-figures">
                   <div>
-                    Budget
+                    Had
                     <strong>{formatMoney(category.budget)}</strong>
                   </div>
                   <div>
@@ -115,8 +133,10 @@ export default function Budget() {
                     <strong>{formatMoney(category.spent)}</strong>
                   </div>
                   <div>
-                    Remaining
-                    <strong>{formatMoney(leftover)}</strong>
+                    Left
+                    <strong className={leftover < 0 ? 'amount-danger' : ''}>
+                      {formatMoney(leftover)}
+                    </strong>
                   </div>
                 </div>
                 <ProgressBar value={category.spent} max={category.budget} tone={tone} />

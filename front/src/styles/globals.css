@@ -592,6 +592,11 @@ textarea {
   margin-top: 14px;
 }
 
+.budget-row-head .account-actions {
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
 .tx-group {
   margin-top: 18px;
 }

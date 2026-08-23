@@ -201,6 +201,16 @@ export function FinanceProvider({ children }) {
     }
   }
 
+  async function deleteCategory(categoryId) {
+    try {
+      await api.delete(`/categories/${categoryId}`);
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
   async function addBudgetItem({ categoryId, name, budget }) {
     const numericBudget = Number(budget);
     if (Number.isNaN(numericBudget) || numericBudget < 0) {
@@ -317,6 +327,7 @@ export function FinanceProvider({ children }) {
         deleteTransaction,
         updateCategoryBudget,
         addCategory,
+        deleteCategory,
         addBudgetItem,
         addAccount,
         updateAccount,

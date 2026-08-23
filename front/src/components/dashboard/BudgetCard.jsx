@@ -9,11 +9,13 @@ export default function BudgetCard({ category }) {
     tone === 'danger' ? 'is-danger' : tone === 'warning' ? 'is-warning' : '';
 
   const remainingLabel =
-    remaining < 0
-      ? `${formatMoney(Math.abs(remaining))} over`
-      : remaining === 0
-        ? 'Budget used'
-        : `${formatMoney(remaining)} left`;
+    category.budget === 0
+      ? 'No budget set'
+      : remaining < 0
+        ? `${formatMoney(Math.abs(remaining))} over of ${formatMoney(category.budget)}`
+        : remaining === 0
+          ? `0 left of ${formatMoney(category.budget)}`
+          : `${formatMoney(remaining)} left of ${formatMoney(category.budget)}`;
 
   return (
     <article className="card">
@@ -22,7 +24,9 @@ export default function BudgetCard({ category }) {
         <div>
           <p className="card-name">{category.name}</p>
           <p className="card-meta">
-            {formatMoney(category.spent)} / {formatMoney(category.budget)}
+            {category.budget === 0
+              ? 'No budget set'
+              : `${formatMoney(category.spent)} spent of ${formatMoney(category.budget)}`}
           </p>
         </div>
       </div>
