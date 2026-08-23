@@ -12,6 +12,7 @@ import usersRouter from './routes/users.js';
 import categoriesRouter from './routes/categories.js';
 import accountsRouter from './routes/accounts.js';
 import budgetsRouter from './routes/budgets.js';
+import transactionsRouter from './routes/transactions.js';
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use('/users', usersRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/accounts', accountsRouter);
 app.use('/api/budgets', budgetsRouter);
+app.use('/api/transactions', transactionsRouter);
 
 app.use('/api', function(req, res) {
   res.status(404).json({ success: false, message: 'Not found' });

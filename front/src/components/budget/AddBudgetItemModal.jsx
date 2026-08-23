@@ -18,14 +18,17 @@ function AddBudgetItemForm({ onClose }) {
   const [name, setName] = useState('');
   const [budget, setBudget] = useState('');
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    const result = addBudgetItem({
+    setSaving(true);
+    const result = await addBudgetItem({
       categoryId: mode === 'existing' ? categoryId : '',
       name,
       budget,
     });
+    setSaving(false);
     if (result) {
       setError(result);
       return;
@@ -42,7 +45,7 @@ function AddBudgetItemForm({ onClose }) {
       {hasCategories ? (
         <div className="form-field">
           <span className="form-label">Assign to</span>
-          <div className="segmented">
+          <div className="segmented segmented-2">
             <button
               type="button"
               className={mode === 'existing' ? 'is-active' : ''}
@@ -111,8 +114,8 @@ function AddBudgetItemForm({ onClose }) {
         </div>
       </label>
       {error ? <p className="form-error">{error}</p> : null}
-      <button type="submit" className="btn btn-primary btn-block">
-        Save budget item
+      <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
+        {saving ? 'Saving…' : 'Save budget item'}
       </button>
     </form>
   );

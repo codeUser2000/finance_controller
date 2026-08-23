@@ -1,17 +1,127 @@
-import { useState } from 'react';
-import { initialFinance } from '../data/mockData.js';
-import { dateToIso } from '../utils/dates.js';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { getBudgetPeriod, isInPeriod } from '../utils/dates.js';
 import { FinanceContext } from './financeContext.js';
+import { api } from '../api/client.js';
 
-function createId() {
-  return crypto.randomUUID();
+function mapAccount(account) {
+  return {
+    id: account.id,
+    name: account.name,
+    type: account.type,
+    kind: account.type === 'savings' ? 'savings' : 'spending',
+    balance: Number(account.balance),
+    currency: account.currency || 'AMD',
+  };
+}
+
+function mapTransaction(transaction) {
+  return {
+    id: transaction.id,
+    type: transaction.type,
+    amount: Number(transaction.amount),
+    categoryId: transaction.category_id,
+    category: transaction.Category?.name || (transaction.type === 'income' ? 'Income' : 'Transfer'),
+    accountId: transaction.account_id,
+    description: transaction.note || transaction.Category?.name || transaction.type,
+    occurredAt: transaction.occurred_at,
+  };
+}
+
+function mergeCategories(apiCategories, budgetItems, transactions, month, year) {
+  return apiCategories.map((category) => {
+    const budgetItem = budgetItems.find(
+      (item) => Number(item.category_id) === Number(category.id),
+    );
+    const spent = transactions
+      .filter(
+        (transaction) =>
+          transaction.type === 'expense' &&
+          Number(transaction.categoryId) === Number(category.id) &&
+          isInPeriod(transaction.occurredAt, month, year),
+      )
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+
+    return {
+      id: category.id,
+      name: category.name,
+      type: category.type,
+      icon: category.icon,
+      color: category.color,
+      budget: budgetItem ? Number(budgetItem.amount) : 0,
+      spent,
+      budgetItemId: budgetItem?.id ?? null,
+    };
+  });
 }
 
 export function FinanceProvider({ children }) {
-  const [data, setData] = useState(() => structuredClone(initialFinance));
+  const period = getBudgetPeriod();
+  const [apiCategories, setApiCategories] = useState([]);
+  const [budgetItems, setBudgetItems] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const remaining = data.spendingBudget - data.spent;
+  const reload = useCallback(async () => {
+    const { month, year } = getBudgetPeriod();
+    const [nextCategories, nextAccounts, nextBudgets, nextTransactions] = await Promise.all([
+      api.get('/categories'),
+      api.get('/accounts'),
+      api.get(`/budgets?month=${month}&year=${year}`),
+      api.get('/transactions'),
+    ]);
+    setApiCategories(nextCategories);
+    setAccounts(nextAccounts.map(mapAccount));
+    setBudgetItems(nextBudgets);
+    setTransactions(nextTransactions.map(mapTransaction));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setError('');
+        await reload();
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(loadError.message || 'Could not reach the server.');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [reload]);
+
+  const categories = useMemo(
+    () => mergeCategories(apiCategories, budgetItems, transactions, period.month, period.year),
+    [apiCategories, budgetItems, transactions, period.month, period.year],
+  );
+
+  const spendingBudget = categories.reduce((sum, category) => sum + category.budget, 0);
+  const spent = categories.reduce((sum, category) => sum + category.spent, 0);
+  const savingsAccounts = accounts.filter((account) => account.type === 'savings');
+
+  const data = {
+    month: period.label,
+    budgetMonth: period.month,
+    budgetYear: period.year,
+    spendingBudget,
+    spent,
+    savingsAccounts,
+    categories,
+    accounts,
+    transactions,
+  };
+
+  const remaining = spendingBudget - spent;
 
   function openAdd() {
     setIsAddOpen(true);
@@ -22,189 +132,175 @@ export function FinanceProvider({ children }) {
   }
 
   function getAccountName(accountId) {
-    return data.accounts.find((account) => account.id === accountId)?.name || '';
+    return accounts.find((account) => String(account.id) === String(accountId))?.name || '';
   }
 
-  function addTransaction({ type, amount, category, accountId, note, date }) {
+  async function addTransaction({ type, amount, categoryId, accountId, note, date }) {
     const numericAmount = Number(amount);
-    if (!numericAmount || numericAmount <= 0) return;
+    if (!numericAmount || numericAmount <= 0) return 'Enter a valid amount.';
+    if (!accountId) return 'Choose an account.';
+    if (type === 'expense' && !categoryId) return 'Choose a category.';
 
-    const description = note?.trim() || category;
-    const transaction = {
-      id: createId(),
-      description,
-      category:
-        type === 'income' ? 'Income' : type === 'transfer' ? 'Transfer' : category,
-      type,
-      amount: numericAmount,
-      accountId,
-      occurredAt: dateToIso(date),
-    };
-
-    setData((prev) => {
-      const next = {
-        ...prev,
-        transactions: [transaction, ...prev.transactions],
-      };
-
-      if (type === 'expense') {
-        next.spent = prev.spent + numericAmount;
-        next.categories = prev.categories.map((item) =>
-          item.name === category
-            ? { ...item, spent: item.spent + numericAmount }
-            : item,
-        );
-        next.accounts = prev.accounts.map((account) =>
-          account.id === accountId
-            ? { ...account, balance: account.balance - numericAmount }
-            : account,
-        );
-      }
-
-      if (type === 'income') {
-        next.accounts = prev.accounts.map((account) =>
-          account.id === accountId
-            ? { ...account, balance: account.balance + numericAmount }
-            : account,
-        );
-      }
-
-      if (type === 'transfer') {
-        next.accounts = prev.accounts.map((account) =>
-          account.id === accountId
-            ? { ...account, balance: account.balance - numericAmount }
-            : account,
-        );
-
-        const goal = prev.savings.find((item) => item.transferCategory === category);
-        if (goal) {
-          next.savings = prev.savings.map((item) =>
-            item.id === goal.id
-              ? {
-                  ...item,
-                  current: item.current + numericAmount,
-                  contributions: [
-                    { id: createId(), label: 'Just now', amount: numericAmount },
-                    ...item.contributions,
-                  ],
-                }
-              : item,
-          );
-          next.accounts = next.accounts.map((account) =>
-            account.id === goal.accountId
-              ? { ...account, balance: account.balance + numericAmount }
-              : account,
-          );
-        }
-      }
-
-      return next;
-    });
-
-    setIsAddOpen(false);
+    try {
+      await api.post('/transactions', {
+        type,
+        amount: numericAmount,
+        category_id: categoryId || null,
+        account_id: accountId,
+        note: note?.trim() || null,
+        occurred_at: date,
+      });
+      await reload();
+      setIsAddOpen(false);
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
   }
 
-  function updateCategoryBudget(categoryId, budget) {
-    const numericBudget = Number(budget);
-    if (Number.isNaN(numericBudget) || numericBudget < 0) return;
-
-    setData((prev) => {
-      const categories = prev.categories.map((item) =>
-        item.id === categoryId ? { ...item, budget: numericBudget } : item,
-      );
-      const spendingBudget = categories.reduce((sum, item) => sum + item.budget, 0);
-      return { ...prev, categories, spendingBudget };
-    });
-  }
-
-  function addCategory(name) {
-    const trimmed = name.trim();
-    if (!trimmed) return 'Enter a category name.';
-
-    const exists = data.categories.some(
-      (item) => item.name.toLowerCase() === trimmed.toLowerCase(),
-    );
-    if (exists) return 'That category already exists.';
-
-    setData((prev) => ({
-      ...prev,
-      categories: [
-        ...prev.categories,
-        { id: createId(), name: trimmed, budget: 0, spent: 0 },
-      ],
-    }));
-
-    return null;
-  }
-
-  function addBudgetItem({ categoryId, name, budget }) {
+  async function updateCategoryBudget(categoryId, budget) {
     const numericBudget = Number(budget);
     if (Number.isNaN(numericBudget) || numericBudget < 0) {
       return 'Enter a valid budget amount.';
     }
 
-    if (categoryId) {
-      const category = data.categories.find((item) => item.id === categoryId);
-      if (!category) return 'Choose a category.';
-      updateCategoryBudget(categoryId, numericBudget);
-      return null;
-    }
+    const category = categories.find((item) => String(item.id) === String(categoryId));
+    if (!category) return 'Choose a category.';
 
+    try {
+      if (category.budgetItemId) {
+        await api.put(`/budgets/${category.budgetItemId}`, { amount: numericBudget });
+      } else {
+        await api.post('/budgets', {
+          category_id: category.id,
+          month: period.month,
+          year: period.year,
+          amount: numericBudget,
+        });
+      }
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
+  async function addCategory({ name, type = 'expense' }) {
     const trimmed = name.trim();
     if (!trimmed) return 'Enter a category name.';
 
-    const existing = data.categories.find(
-      (item) => item.name.toLowerCase() === trimmed.toLowerCase(),
-    );
-
-    if (existing) {
-      updateCategoryBudget(existing.id, numericBudget);
+    try {
+      await api.post('/categories', {
+        name: trimmed,
+        type: type === 'income' ? 'income' : 'expense',
+      });
+      await reload();
       return null;
+    } catch (saveError) {
+      return saveError.message;
     }
-
-    setData((prev) => {
-      const categories = [
-        ...prev.categories,
-        { id: createId(), name: trimmed, budget: numericBudget, spent: 0 },
-      ];
-      const spendingBudget = categories.reduce((sum, item) => sum + item.budget, 0);
-      return { ...prev, categories, spendingBudget };
-    });
-
-    return null;
   }
 
-  function addAccount({ name, kind, balance, note }) {
+  async function addBudgetItem({ categoryId, name, budget }) {
+    const numericBudget = Number(budget);
+    if (Number.isNaN(numericBudget) || numericBudget < 0) {
+      return 'Enter a valid budget amount.';
+    }
+
+    try {
+      let nextCategoryId = categoryId;
+      if (!nextCategoryId) {
+        const trimmed = name.trim();
+        if (!trimmed) return 'Enter a category name.';
+        const created = await api.post('/categories', {
+          name: trimmed,
+          type: 'expense',
+        });
+        nextCategoryId = created.id;
+      }
+
+      const existing = categories.find((item) => String(item.id) === String(nextCategoryId));
+      if (existing?.budgetItemId) {
+        await api.put(`/budgets/${existing.budgetItemId}`, { amount: numericBudget });
+      } else {
+        await api.post('/budgets', {
+          category_id: nextCategoryId,
+          month: period.month,
+          year: period.year,
+          amount: numericBudget,
+        });
+      }
+
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
+  async function addAccount({ name, type, balance }) {
     const trimmed = name.trim();
     if (!trimmed) return 'Enter an account name.';
 
-    const exists = data.accounts.some(
-      (item) => item.name.toLowerCase() === trimmed.toLowerCase(),
-    );
-    if (exists) return 'That account already exists.';
-
-    const numericBalance = Number(balance);
+    const numericBalance = balance === '' || balance === undefined ? 0 : Number(balance);
     if (Number.isNaN(numericBalance)) return 'Enter a valid opening balance.';
 
-    const accountKind = kind === 'savings' ? 'savings' : 'spending';
+    const accountType = ['cash', 'card', 'bank', 'savings'].includes(type)
+      ? type
+      : 'card';
 
-    setData((prev) => ({
-      ...prev,
-      accounts: [
-        ...prev.accounts,
-        {
-          id: createId(),
-          name: trimmed,
-          balance: numericBalance,
-          kind: accountKind,
-          note:
-            note?.trim() ||
-            (accountKind === 'savings' ? 'Savings account' : 'Spending account'),
-        },
-      ],
-    }));
+    try {
+      await api.post('/accounts', {
+        name: trimmed,
+        type: accountType,
+        balance: numericBalance,
+        currency: 'AMD',
+      });
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
 
-    return null;
+  async function updateAccount(accountId, { name, type }) {
+    const trimmed = name.trim();
+    if (!trimmed) return 'Enter an account name.';
+
+    const accountType = ['cash', 'card', 'bank', 'savings'].includes(type)
+      ? type
+      : 'card';
+
+    try {
+      await api.put(`/accounts/${accountId}`, {
+        name: trimmed,
+        type: accountType,
+      });
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
+  async function deleteAccount(accountId) {
+    try {
+      await api.delete(`/accounts/${accountId}`);
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
+  async function deleteTransaction(transactionId) {
+    try {
+      await api.delete(`/transactions/${transactionId}`);
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
   }
 
   return (
@@ -212,14 +308,19 @@ export function FinanceProvider({ children }) {
       value={{
         data,
         remaining,
+        loading,
+        error,
         isAddOpen,
         openAdd,
         closeAdd,
         addTransaction,
+        deleteTransaction,
         updateCategoryBudget,
         addCategory,
         addBudgetItem,
         addAccount,
+        updateAccount,
+        deleteAccount,
         getAccountName,
       }}
     >

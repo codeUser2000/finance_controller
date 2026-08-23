@@ -3,8 +3,11 @@ import { Landmark, WalletCards } from 'lucide-react';
 import Sidebar from './Sidebar.jsx';
 import MobileNav from './MobileNav.jsx';
 import AddTransactionModal from '../transactions/AddTransactionModal.jsx';
+import { useFinance } from '../../context/useFinance.js';
 
 export default function AppLayout() {
+  const { loading, error } = useFinance();
+
   return (
     <div className="app-shell">
       <Sidebar />
@@ -21,7 +24,13 @@ export default function AppLayout() {
           </Link>
         </header>
         <main className="app-content">
-          <Outlet />
+          {error ? (
+            <p className="app-banner">
+              Could not load data from the server. Start the backend on port 3000,
+              then refresh.
+            </p>
+          ) : null}
+          {loading ? <p className="loading-copy">Loading your money…</p> : <Outlet />}
         </main>
       </div>
       <MobileNav />

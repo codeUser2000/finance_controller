@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import defineCategory from './Category.js';
 import defineAccount from './Account.js';
 import defineBudgetItem from './BudgetItem.js';
+import defineTransaction from './Transaction.js';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ export const sequelize = new Sequelize(
 export const Category = defineCategory(sequelize);
 export const Account = defineAccount(sequelize);
 export const BudgetItem = defineBudgetItem(sequelize);
+export const Transaction = defineTransaction(sequelize);
 
 Category.hasMany(BudgetItem, {
   foreignKey: 'category_id',
@@ -30,4 +32,24 @@ Category.hasMany(BudgetItem, {
 BudgetItem.belongsTo(Category, {
   foreignKey: 'category_id',
   as: 'Category',
+});
+
+Category.hasMany(Transaction, {
+  foreignKey: 'category_id',
+  as: 'transactions',
+});
+
+Transaction.belongsTo(Category, {
+  foreignKey: 'category_id',
+  as: 'Category',
+});
+
+Account.hasMany(Transaction, {
+  foreignKey: 'account_id',
+  as: 'transactions',
+});
+
+Transaction.belongsTo(Account, {
+  foreignKey: 'account_id',
+  as: 'Account',
 });

@@ -3,7 +3,7 @@ import { useFinance } from '../../context/useFinance.js';
 import TransactionRow from '../shared/TransactionRow.jsx';
 
 export default function RecentTransactions() {
-  const { data, getAccountName } = useFinance();
+  const { data, getAccountName, openAdd } = useFinance();
   const recent = data.transactions.slice(0, 5);
 
   return (
@@ -15,16 +15,25 @@ export default function RecentTransactions() {
         </Link>
       </div>
       <div className="card">
-        <div className="tx-list">
-          {recent.map((transaction) => (
-            <TransactionRow
-              key={transaction.id}
-              transaction={transaction}
-              accountName={getAccountName(transaction.accountId)}
-              compact
-            />
-          ))}
-        </div>
+        {recent.length === 0 ? (
+          <div className="empty-state">
+            <p>No transactions yet.</p>
+            <button type="button" className="btn btn-primary" onClick={openAdd}>
+              Add transaction
+            </button>
+          </div>
+        ) : (
+          <div className="tx-list">
+            {recent.map((transaction) => (
+              <TransactionRow
+                key={transaction.id}
+                transaction={transaction}
+                accountName={getAccountName(transaction.accountId)}
+                compact
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

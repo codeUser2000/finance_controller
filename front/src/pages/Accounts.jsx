@@ -2,11 +2,30 @@ import { useState } from 'react';
 import { CreditCard, PiggyBank, Plus } from 'lucide-react';
 import { useFinance } from '../context/useFinance.js';
 import { formatMoney } from '../utils/formatMoney.js';
-import AddAccountModal from '../components/accounts/AddAccountModal.jsx';
+import AccountModal from '../components/accounts/AccountModal.jsx';
+
+function typeLabel(type) {
+  if (type === 'cash') return 'Cash';
+  if (type === 'bank') return 'Bank';
+  if (type === 'savings') return 'Savings';
+  return 'Card';
+}
 
 export default function Accounts() {
-  const { data } = useFinance();
-  const [adding, setAdding] = useState(false);
+  const { data, deleteAccount } = useFinance();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  function closeModal() {
+    setModalOpen(false);
+    setEditing(null);
+  }
+
+  async function handleDelete(account) {
+    const confirmed = window.confirm(`Delete ${account.name}?`);
+    if (!confirmed) return;
+    await deleteAccount(account.id);
+  }
 
   return (
     <>
@@ -19,7 +38,10 @@ export default function Accounts() {
             <button
               type="button"
               className="btn btn-primary btn-small"
-              onClick={() => setAdding(true)}
+              onClick={() => {
+                setEditing(null);
+                setModalOpen(true);
+              }}
             >
               <Plus size={16} />
               Account
@@ -27,26 +49,25 @@ export default function Accounts() {
           </div>
         </div>
         <p className="page-subtitle">
-          Where the money actually sits. Budgets are limits, not accounts.
+          Where the money actually sits. Adding or deleting a transaction changes the balance.
         </p>
       </header>
 
       <p className="callout">
-        Spending accounts are for this month. Savings accounts are reserved and
-        should not feel spendable.
+        Expense removes money. Income adds money. Deleting a transaction reverses that change.
       </p>
 
       {data.accounts.length === 0 ? (
         <div className="card empty-state">
           <p>No accounts yet.</p>
-          <button type="button" className="btn btn-primary" onClick={() => setAdding(true)}>
+          <button type="button" className="btn btn-primary" onClick={() => setModalOpen(true)}>
             Add account
           </button>
         </div>
       ) : (
         <div className="account-grid">
           {data.accounts.map((account) => {
-            const isSavings = account.kind === 'savings';
+            const isSavings = account.type === 'savings';
             return (
               <article key={account.id} className="card">
                 <div className="account-card-top">
@@ -60,17 +81,36 @@ export default function Accounts() {
                 </div>
                 <p className="card-name">{account.name}</p>
                 <p className="account-balance amount">{formatMoney(account.balance)}</p>
-                <p className="card-meta">{account.note}</p>
+                <p className="card-meta">{account.currency || 'AMD'}</p>
                 <span className={`account-kind ${isSavings ? 'is-savings' : ''}`}>
-                  {isSavings ? 'Savings' : 'Spending'}
+                  {typeLabel(account.type)}
                 </span>
+                <div className="account-actions">
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-small"
+                    onClick={() => {
+                      setEditing(account);
+                      setModalOpen(true);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-small"
+                    onClick={() => handleDelete(account)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </article>
             );
           })}
         </div>
       )}
 
-      <AddAccountModal open={adding} onClose={() => setAdding(false)} />
+      <AccountModal open={modalOpen} account={editing} onClose={closeModal} />
     </>
   );
 }

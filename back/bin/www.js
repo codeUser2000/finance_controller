@@ -89,4 +89,5 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debugServer('Listening on ' + bind);
+  console.log('API listening on ' + bind);
 }

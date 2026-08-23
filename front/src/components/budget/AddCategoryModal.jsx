@@ -13,11 +13,15 @@ export default function AddCategoryModal({ open, onClose }) {
 function AddCategoryForm({ onClose }) {
   const { addCategory } = useFinance();
   const [name, setName] = useState('');
+  const [type, setType] = useState('expense');
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    const result = addCategory(name);
+    setSaving(true);
+    const result = await addCategory({ name, type });
+    setSaving(false);
     if (result) {
       setError(result);
       return;
@@ -45,9 +49,28 @@ function AddCategoryForm({ onClose }) {
           }}
         />
       </label>
+      <div className="form-field">
+        <span className="form-label">Type</span>
+        <div className="segmented segmented-2">
+          <button
+            type="button"
+            className={type === 'expense' ? 'is-active' : ''}
+            onClick={() => setType('expense')}
+          >
+            Expense
+          </button>
+          <button
+            type="button"
+            className={type === 'income' ? 'is-active' : ''}
+            onClick={() => setType('income')}
+          >
+            Income
+          </button>
+        </div>
+      </div>
       {error ? <p className="form-error">{error}</p> : null}
-      <button type="submit" className="btn btn-primary btn-block">
-        Save category
+      <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
+        {saving ? 'Saving…' : 'Save category'}
       </button>
     </form>
   );
