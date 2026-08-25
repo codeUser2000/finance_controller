@@ -1,15 +1,17 @@
 import { Link, Outlet } from 'react-router-dom';
-import { Landmark, WalletCards } from 'lucide-react';
+import { Landmark, LogOut, WalletCards } from 'lucide-react';
 import Sidebar from './Sidebar.jsx';
 import MobileNav from './MobileNav.jsx';
 import LanguageToggle from './LanguageToggle.jsx';
 import AddTransactionModal from '../transactions/AddTransactionModal.jsx';
 import { useFinance } from '../../context/useFinance.js';
 import { useLanguage } from '../../context/useLanguage.js';
+import { useAuth } from '../../context/useAuth.js';
 
 export default function AppLayout() {
   const { loading, error } = useFinance();
   const { t } = useLanguage();
+  const { logout } = useAuth();
 
   return (
     <div className="app-shell">
@@ -27,6 +29,9 @@ export default function AppLayout() {
             <Link to="/accounts" className="icon-button" aria-label={t('nav.accounts')}>
               <Landmark size={18} />
             </Link>
+            <button type="button" className="icon-button" onClick={logout} aria-label={t('auth.logout')}>
+              <LogOut size={18} />
+            </button>
           </div>
         </header>
         <main className="app-content">

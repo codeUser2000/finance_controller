@@ -10,11 +10,13 @@ import {
 } from 'lucide-react';
 import { useFinance } from '../../context/useFinance.js';
 import { useLanguage } from '../../context/useLanguage.js';
+import { useAuth } from '../../context/useAuth.js';
 import LanguageToggle from './LanguageToggle.jsx';
 
 export default function Sidebar() {
   const { openAdd } = useFinance();
   const { t } = useLanguage();
+  const { user, logout } = useAuth();
 
   const links = [
     { to: '/', label: t('nav.home'), icon: Home, end: true },
@@ -51,10 +53,14 @@ export default function Sidebar() {
         })}
       </nav>
       <div className="sidebar-footer">
+        {user ? <p className="sidebar-user">{user.name}</p> : null}
         <LanguageToggle />
         <button type="button" className="btn btn-primary btn-block sidebar-add" onClick={openAdd}>
           <Plus size={18} />
           {t('nav.addTransaction')}
+        </button>
+        <button type="button" className="btn btn-ghost btn-block" onClick={logout}>
+          {t('auth.logout')}
         </button>
       </div>
     </aside>

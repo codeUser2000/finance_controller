@@ -1,20 +1,24 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageProvider.jsx';
-import { FinanceProvider } from './context/FinanceContext.jsx';
-import AppLayout from './components/layout/AppLayout.jsx';
+import { AuthProvider } from './context/AuthProvider.jsx';
+import ProtectedLayout from './components/layout/ProtectedLayout.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Transactions from './pages/Transactions.jsx';
 import Budget from './pages/Budget.jsx';
 import Goals from './pages/Goals.jsx';
 import Accounts from './pages/Accounts.jsx';
+import Login from './pages/Login.jsx';
+import Register from './pages/Register.jsx';
 
 export default function App() {
   return (
     <BrowserRouter>
       <LanguageProvider>
-        <FinanceProvider>
+        <AuthProvider>
           <Routes>
-            <Route element={<AppLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route element={<ProtectedLayout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/budget" element={<Budget />} />
@@ -23,7 +27,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
-        </FinanceProvider>
+        </AuthProvider>
       </LanguageProvider>
     </BrowserRouter>
   );

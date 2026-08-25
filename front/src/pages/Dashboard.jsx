@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useFinance } from '../context/useFinance.js';
 import { useLanguage } from '../context/useLanguage.js';
+import { useAuth } from '../context/useAuth.js';
 import { getGreetingKey } from '../utils/dates.js';
 import { formatMoney } from '../utils/formatMoney.js';
 import SpendableCard from '../components/dashboard/SpendableCard.jsx';
@@ -10,11 +11,15 @@ import RecentTransactions from '../components/dashboard/RecentTransactions.jsx';
 export default function Dashboard() {
   const { data } = useFinance();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   return (
     <>
       <header className="page-header">
-        <p className="page-kicker">{t(getGreetingKey())}</p>
+        <p className="page-kicker">
+          {t(getGreetingKey())}
+          {user?.name ? `, ${user.name}` : ''}
+        </p>
         <h1 className="page-title">{data.month}</h1>
       </header>
 

@@ -57,7 +57,7 @@ function validateTransaction(body, { partial = false } = {}) {
   return null;
 }
 
-function toPayload(body, { partial = false } = {}) {
+function toPayload(body, userId, { partial = false } = {}) {
   const payload = {};
   if (!partial || body.type !== undefined) payload.type = body.type;
   if (!partial || body.amount !== undefined) payload.amount = body.amount;
@@ -67,34 +67,43 @@ function toPayload(body, { partial = false } = {}) {
   if (!partial || body.account_id !== undefined) payload.account_id = body.account_id;
   if (!partial || body.note !== undefined) payload.note = body.note?.trim() || null;
   if (!partial || body.occurred_at !== undefined) payload.occurred_at = body.occurred_at;
+  if (!partial) payload.user_id = userId;
   return payload;
 }
 
-const includes = [
-  { model: Category, as: 'Category' },
-  { model: Account, as: 'Account' },
-];
+function includes() {
+  return [
+    { model: Category, as: 'Category' },
+    { model: Account, as: 'Account' },
+  ];
+}
 
-async function assertAccount(accountId, transaction) {
-  const account = await Account.findOne({
-    where: { id: accountId, is_active: true },
+async function assertAccount(req, accountId, transaction) {
+  return Account.findOne({
+    where: { id: accountId, user_id: req.user.id, is_active: true },
     transaction,
     lock: transaction.LOCK.UPDATE,
   });
-  return account;
 }
 
-async function assertCategory(categoryId) {
+async function assertCategory(req, categoryId) {
   if (!categoryId) return true;
   const category = await Category.findOne({
-    where: { id: categoryId, is_active: true },
+    where: { id: categoryId, user_id: req.user.id, is_active: true },
   });
   return Boolean(category);
 }
 
+async function findOwnedTransaction(req, id) {
+  return Transaction.findOne({
+    where: { id, user_id: req.user.id },
+    include: includes(),
+  });
+}
+
 export async function list(req, res) {
   try {
-    const where = {};
+    const where = { user_id: req.user.id };
     const month = req.query.month !== undefined ? parseInteger(req.query.month) : null;
     const year = req.query.year !== undefined ? parseInteger(req.query.year) : null;
 
@@ -120,7 +129,7 @@ export async function list(req, res) {
 
     const transactions = await Transaction.findAll({
       where,
-      include: includes,
+      include: includes(),
       order: [['occurred_at', 'DESC'], ['id', 'DESC']],
     });
 
@@ -132,7 +141,7 @@ export async function list(req, res) {
 
 export async function getById(req, res) {
   try {
-    const transaction = await Transaction.findByPk(req.params.id, { include: includes });
+    const transaction = await findOwnedTransaction(req, req.params.id);
     if (!transaction) {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
@@ -148,17 +157,17 @@ export async function create(req, res) {
     if (error) {
       return res.status(400).json({ success: false, message: error });
     }
-    if (!(await assertCategory(req.body.category_id))) {
+    if (!(await assertCategory(req, req.body.category_id))) {
       return res.status(400).json({ success: false, message: 'category_id must belong to an active category' });
     }
 
     const created = await sequelize.transaction(async (t) => {
-      const account = await assertAccount(req.body.account_id, t);
+      const account = await assertAccount(req, req.body.account_id, t);
       if (!account) {
         throw Object.assign(new Error('account_id must belong to an active account'), { status: 400 });
       }
 
-      const transaction = await Transaction.create(toPayload(req.body), { transaction: t });
+      const transaction = await Transaction.create(toPayload(req.body, req.user.id), { transaction: t });
       await account.increment('balance', {
         by: balanceDelta(req.body.type, req.body.amount),
         transaction: t,
@@ -166,7 +175,7 @@ export async function create(req, res) {
       return transaction;
     });
 
-    await created.reload({ include: includes });
+    await created.reload({ include: includes() });
     res.status(201).json({ success: true, data: created });
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });
@@ -175,7 +184,9 @@ export async function create(req, res) {
 
 export async function update(req, res) {
   try {
-    const existing = await Transaction.findByPk(req.params.id);
+    const existing = await Transaction.findOne({
+      where: { id: req.params.id, user_id: req.user.id },
+    });
     if (!existing) {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
@@ -185,16 +196,20 @@ export async function update(req, res) {
       return res.status(400).json({ success: false, message: error });
     }
 
-    const next = { ...existing.toJSON(), ...toPayload(req.body, { partial: true }) };
+    const next = { ...existing.toJSON(), ...toPayload(req.body, req.user.id, { partial: true }) };
     if (next.type === 'expense' && !next.category_id) {
       return res.status(400).json({ success: false, message: 'category_id is required for expenses' });
     }
-    if (!(await assertCategory(next.category_id))) {
+    if (!(await assertCategory(req, next.category_id))) {
       return res.status(400).json({ success: false, message: 'category_id must belong to an active category' });
     }
 
     await sequelize.transaction(async (t) => {
-      const oldAccount = await assertAccount(existing.account_id, t);
+      const oldAccount = await Account.findOne({
+        where: { id: existing.account_id, user_id: req.user.id },
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
       if (oldAccount) {
         await oldAccount.increment('balance', {
           by: -balanceDelta(existing.type, existing.amount),
@@ -202,19 +217,19 @@ export async function update(req, res) {
         });
       }
 
-      const nextAccount = await assertAccount(next.account_id, t);
+      const nextAccount = await assertAccount(req, next.account_id, t);
       if (!nextAccount) {
         throw Object.assign(new Error('account_id must belong to an active account'), { status: 400 });
       }
 
-      await existing.update(toPayload(req.body, { partial: true }), { transaction: t });
+      await existing.update(toPayload(req.body, req.user.id, { partial: true }), { transaction: t });
       await nextAccount.increment('balance', {
         by: balanceDelta(next.type, next.amount),
         transaction: t,
       });
     });
 
-    await existing.reload({ include: includes });
+    await existing.reload({ include: includes() });
     res.json({ success: true, data: existing });
   } catch (error) {
     res.status(error.status || 500).json({ success: false, message: error.message });
@@ -223,13 +238,16 @@ export async function update(req, res) {
 
 export async function remove(req, res) {
   try {
-    const existing = await Transaction.findByPk(req.params.id);
+    const existing = await Transaction.findOne({
+      where: { id: req.params.id, user_id: req.user.id },
+    });
     if (!existing) {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
 
     await sequelize.transaction(async (t) => {
-      const account = await Account.findByPk(existing.account_id, {
+      const account = await Account.findOne({
+        where: { id: existing.account_id, user_id: req.user.id },
         transaction: t,
         lock: t.LOCK.UPDATE,
       });

@@ -2,6 +2,10 @@ import { Category } from '../models/index.js';
 
 const CATEGORY_TYPES = ['expense', 'income'];
 
+function owned(req) {
+  return { user_id: req.user.id, is_active: true };
+}
+
 function validateCategory(body, { partial = false } = {}) {
   if (!partial || body.name !== undefined) {
     if (!body.name || !String(body.name).trim()) {
@@ -43,7 +47,7 @@ function toCategoryPayload(body, { partial = false } = {}) {
 export async function list(req, res) {
   try {
     const categories = await Category.findAll({
-      where: { is_active: true },
+      where: owned(req),
       order: [['name', 'ASC']],
     });
     res.json({ success: true, data: categories });
@@ -55,7 +59,7 @@ export async function list(req, res) {
 export async function getById(req, res) {
   try {
     const category = await Category.findOne({
-      where: { id: req.params.id, is_active: true },
+      where: { id: req.params.id, ...owned(req) },
     });
 
     if (!category) {
@@ -75,7 +79,10 @@ export async function create(req, res) {
       return res.status(400).json({ success: false, message: error });
     }
 
-    const category = await Category.create(toCategoryPayload(req.body));
+    const category = await Category.create({
+      ...toCategoryPayload(req.body),
+      user_id: req.user.id,
+    });
     res.status(201).json({ success: true, data: category });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -85,7 +92,7 @@ export async function create(req, res) {
 export async function update(req, res) {
   try {
     const category = await Category.findOne({
-      where: { id: req.params.id, is_active: true },
+      where: { id: req.params.id, ...owned(req) },
     });
 
     if (!category) {
@@ -107,7 +114,7 @@ export async function update(req, res) {
 export async function remove(req, res) {
   try {
     const category = await Category.findOne({
-      where: { id: req.params.id, is_active: true },
+      where: { id: req.params.id, ...owned(req) },
     });
 
     if (!category) {

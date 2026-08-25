@@ -171,21 +171,29 @@ textarea {
 }
 
 .lang-toggle {
+  width: 100%;
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 10px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
   background: #eef2f6;
+  border: 1px solid var(--color-border);
 }
 
 .lang-toggle button {
-  min-width: 36px;
-  min-height: 32px;
+  flex: 1;
+  min-width: 0;
+  min-height: 34px;
   padding: 0 8px;
-  border-radius: 8px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   color: var(--color-text-secondary);
 }
 
@@ -195,8 +203,12 @@ textarea {
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
 }
 
+.lang-toggle.is-compact {
+  width: auto;
+  min-width: 148px;
+}
+
 .lang-toggle.is-compact button {
-  min-width: 32px;
   min-height: 30px;
   padding: 0 6px;
 }
@@ -1150,4 +1162,77 @@ textarea {
   justify-content: space-between;
   gap: 12px;
   font-size: 14px;
+}
+
+.sidebar-user {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-page {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  text-align: left;
+}
+
+.auth-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-title {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+  color: var(--color-primary);
+}
+
+.auth-subtitle {
+  margin-top: 2px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-switch {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.auth-switch a {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.form-field .form-hint {
+  margin: 0;
+  font-size: 12px;
 }

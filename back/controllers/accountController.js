@@ -2,6 +2,10 @@ import { Account } from '../models/index.js';
 
 const ACCOUNT_TYPES = ['cash', 'card', 'bank', 'savings'];
 
+function owned(req) {
+  return { user_id: req.user.id, is_active: true };
+}
+
 function validateAccount(body, { partial = false } = {}) {
   if (!partial || body.name !== undefined) {
     if (!body.name || !String(body.name).trim()) {
@@ -49,7 +53,7 @@ function toAccountPayload(body, { partial = false } = {}) {
 export async function list(req, res) {
   try {
     const accounts = await Account.findAll({
-      where: { is_active: true },
+      where: owned(req),
       order: [['name', 'ASC']],
     });
     res.json({ success: true, data: accounts });
@@ -61,7 +65,7 @@ export async function list(req, res) {
 export async function getById(req, res) {
   try {
     const account = await Account.findOne({
-      where: { id: req.params.id, is_active: true },
+      where: { id: req.params.id, ...owned(req) },
     });
 
     if (!account) {
@@ -81,7 +85,10 @@ export async function create(req, res) {
       return res.status(400).json({ success: false, message: error });
     }
 
-    const account = await Account.create(toAccountPayload(req.body));
+    const account = await Account.create({
+      ...toAccountPayload(req.body),
+      user_id: req.user.id,
+    });
     res.status(201).json({ success: true, data: account });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -91,7 +98,7 @@ export async function create(req, res) {
 export async function update(req, res) {
   try {
     const account = await Account.findOne({
-      where: { id: req.params.id, is_active: true },
+      where: { id: req.params.id, ...owned(req) },
     });
 
     if (!account) {
@@ -113,7 +120,7 @@ export async function update(req, res) {
 export async function remove(req, res) {
   try {
     const account = await Account.findOne({
-      where: { id: req.params.id, is_active: true },
+      where: { id: req.params.id, ...owned(req) },
     });
 
     if (!account) {

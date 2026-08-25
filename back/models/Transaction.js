@@ -9,6 +9,10 @@ export default function defineTransaction(sequelize) {
         primaryKey: true,
         autoIncrement: true,
       },
+      user_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       type: {
         type: DataTypes.ENUM('expense', 'income', 'transfer'),
         allowNull: false,

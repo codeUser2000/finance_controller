@@ -63,10 +63,20 @@ function uniqueConstraintMessage(error) {
   return error.message;
 }
 
-const categoryInclude = {
-  model: Category,
-  as: 'Category',
-};
+function categoryInclude(req) {
+  return {
+    model: Category,
+    as: 'Category',
+    where: { user_id: req.user.id },
+    required: true,
+  };
+}
+
+async function findOwnedCategory(req, categoryId) {
+  return Category.findOne({
+    where: { id: categoryId, user_id: req.user.id, is_active: true },
+  });
+}
 
 export async function list(req, res) {
   try {
@@ -88,7 +98,7 @@ export async function list(req, res) {
 
     const budgets = await BudgetItem.findAll({
       where,
-      include: [categoryInclude],
+      include: [categoryInclude(req)],
       order: [['year', 'DESC'], ['month', 'DESC'], ['id', 'ASC']],
     });
 
@@ -101,7 +111,7 @@ export async function list(req, res) {
 export async function getById(req, res) {
   try {
     const budget = await BudgetItem.findByPk(req.params.id, {
-      include: [categoryInclude],
+      include: [categoryInclude(req)],
     });
 
     if (!budget) {
@@ -121,15 +131,13 @@ export async function create(req, res) {
       return res.status(400).json({ success: false, message: error });
     }
 
-    const category = await Category.findOne({
-      where: { id: req.body.category_id, is_active: true },
-    });
+    const category = await findOwnedCategory(req, req.body.category_id);
     if (!category) {
       return res.status(400).json({ success: false, message: 'category_id must belong to an active category' });
     }
 
     const budget = await BudgetItem.create(toBudgetPayload(req.body));
-    await budget.reload({ include: [categoryInclude] });
+    await budget.reload({ include: [categoryInclude(req)] });
     res.status(201).json({ success: true, data: budget });
   } catch (error) {
     const status = error.name === 'SequelizeUniqueConstraintError' ? 400 : 500;
@@ -139,7 +147,9 @@ export async function create(req, res) {
 
 export async function update(req, res) {
   try {
-    const budget = await BudgetItem.findByPk(req.params.id);
+    const budget = await BudgetItem.findByPk(req.params.id, {
+      include: [categoryInclude(req)],
+    });
     if (!budget) {
       return res.status(404).json({ success: false, message: 'Budget item not found' });
     }
@@ -150,16 +160,14 @@ export async function update(req, res) {
     }
 
     if (req.body.category_id !== undefined) {
-      const category = await Category.findOne({
-        where: { id: req.body.category_id, is_active: true },
-      });
+      const category = await findOwnedCategory(req, req.body.category_id);
       if (!category) {
         return res.status(400).json({ success: false, message: 'category_id must belong to an active category' });
       }
     }
 
     await budget.update(toBudgetPayload(req.body, { partial: true }));
-    await budget.reload({ include: [categoryInclude] });
+    await budget.reload({ include: [categoryInclude(req)] });
     res.json({ success: true, data: budget });
   } catch (error) {
     const status = error.name === 'SequelizeUniqueConstraintError' ? 400 : 500;
@@ -169,7 +177,9 @@ export async function update(req, res) {
 
 export async function remove(req, res) {
   try {
-    const budget = await BudgetItem.findByPk(req.params.id);
+    const budget = await BudgetItem.findByPk(req.params.id, {
+      include: [categoryInclude(req)],
+    });
     if (!budget) {
       return res.status(404).json({ success: false, message: 'Budget item not found' });
     }

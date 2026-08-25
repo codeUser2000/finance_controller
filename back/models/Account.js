@@ -9,6 +9,10 @@ export default function defineAccount(sequelize) {
         primaryKey: true,
         autoIncrement: true,
       },
+      user_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       name: {
         type: DataTypes.STRING(120),
         allowNull: false,

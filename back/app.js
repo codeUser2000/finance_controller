@@ -13,6 +13,7 @@ import categoriesRouter from './routes/categories.js';
 import accountsRouter from './routes/accounts.js';
 import budgetsRouter from './routes/budgets.js';
 import transactionsRouter from './routes/transactions.js';
+import authRouter from './routes/auth.js';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/accounts', accountsRouter);
 app.use('/api/budgets', budgetsRouter);

@@ -1,7 +1,10 @@
 import express from 'express';
 import * as accountController from '../controllers/accountController.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
+
+router.use(requireAuth);
 
 router.get('/', accountController.list);
 router.get('/:id', accountController.getById);
