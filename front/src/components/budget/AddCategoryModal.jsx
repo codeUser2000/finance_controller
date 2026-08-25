@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
+import { useLanguage } from '../../context/useLanguage.js';
 
 export default function AddCategoryModal({ open, onClose }) {
+  const { t } = useLanguage();
+
   return (
-    <Modal title="Add category" open={open} onClose={onClose}>
+    <Modal title={t('modal.addCategory')} open={open} onClose={onClose}>
       {open ? <AddCategoryForm onClose={onClose} /> : null}
     </Modal>
   );
@@ -12,6 +15,7 @@ export default function AddCategoryModal({ open, onClose }) {
 
 function AddCategoryForm({ onClose }) {
   const { addCategory } = useFinance();
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [type, setType] = useState('expense');
   const [error, setError] = useState('');
@@ -31,15 +35,12 @@ function AddCategoryForm({ onClose }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <p className="form-hint">
-        Categories group your spending. You can give this one a monthly budget
-        next.
-      </p>
+      <p className="form-hint">{t('modal.categoryHint')}</p>
       <label className="form-field">
-        <span className="form-label">Name</span>
+        <span className="form-label">{t('modal.name')}</span>
         <input
           type="text"
-          placeholder="Groceries"
+          placeholder={t('modal.groceriesPlaceholder')}
           required
           autoFocus
           value={name}
@@ -50,27 +51,27 @@ function AddCategoryForm({ onClose }) {
         />
       </label>
       <div className="form-field">
-        <span className="form-label">Type</span>
+        <span className="form-label">{t('modal.type')}</span>
         <div className="segmented segmented-2">
           <button
             type="button"
             className={type === 'expense' ? 'is-active' : ''}
             onClick={() => setType('expense')}
           >
-            Expense
+            {t('types.expense')}
           </button>
           <button
             type="button"
             className={type === 'income' ? 'is-active' : ''}
             onClick={() => setType('income')}
           >
-            Income
+            {t('types.income')}
           </button>
         </div>
       </div>
       {error ? <p className="form-error">{error}</p> : null}
       <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
-        {saving ? 'Saving…' : 'Save category'}
+        {saving ? t('modal.saving') : t('modal.saveCategory')}
       </button>
     </form>
   );

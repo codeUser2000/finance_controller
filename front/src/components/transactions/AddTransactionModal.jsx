@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
+import { useLanguage } from '../../context/useLanguage.js';
 import { toInputDate } from '../../utils/dates.js';
 
 export default function AddTransactionModal() {
   const { isAddOpen, closeAdd } = useFinance();
+  const { t } = useLanguage();
 
   return (
-    <Modal title="Add transaction" open={isAddOpen} onClose={closeAdd}>
+    <Modal title={t('modal.addTransaction')} open={isAddOpen} onClose={closeAdd}>
       {isAddOpen ? <AddTransactionForm /> : null}
     </Modal>
   );
@@ -23,6 +25,7 @@ function categoriesForType(type, categories) {
 
 function AddTransactionForm() {
   const { data, addTransaction } = useFinance();
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     type: 'expense',
     amount: '',
@@ -38,10 +41,10 @@ function AddTransactionForm() {
   const needsCategory = form.type === 'expense';
   const saveLabel =
     form.type === 'income'
-      ? 'Save income'
+      ? t('modal.saveIncome')
       : form.type === 'transfer'
-        ? 'Save transfer'
-        : 'Save expense';
+        ? t('modal.saveTransfer')
+        : t('modal.saveExpense');
 
   function updateField(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -69,12 +72,12 @@ function AddTransactionForm() {
   return (
     <form onSubmit={handleSubmit}>
       <div className="form-field">
-        <span className="form-label">Type</span>
+        <span className="form-label">{t('modal.type')}</span>
         <div className="segmented">
           {[
-            { id: 'expense', label: 'Expense' },
-            { id: 'income', label: 'Income' },
-            { id: 'transfer', label: 'Transfer' },
+            { id: 'expense', label: t('types.expense') },
+            { id: 'income', label: t('types.income') },
+            { id: 'transfer', label: t('types.transfer') },
           ].map((option) => (
             <button
               key={option.id}
@@ -89,7 +92,7 @@ function AddTransactionForm() {
       </div>
 
       <label className="form-field">
-        <span className="form-label">Amount</span>
+        <span className="form-label">{t('modal.amount')}</span>
         <div className="amount-field">
           <input
             type="number"
@@ -107,7 +110,7 @@ function AddTransactionForm() {
 
       {form.type !== 'transfer' ? (
         <label className="form-field">
-          <span className="form-label">Category</span>
+          <span className="form-label">{t('modal.category')}</span>
           <select
             value={form.categoryId}
             onChange={(event) => updateField('categoryId', event.target.value)}
@@ -115,7 +118,7 @@ function AddTransactionForm() {
             disabled={categories.length === 0}
           >
             {categories.length === 0 ? (
-              <option value="">Add a category first</option>
+              <option value="">{t('modal.addCategoryFirst')}</option>
             ) : (
               categories.map((category) => (
                 <option key={category.id} value={category.id}>
@@ -128,7 +131,7 @@ function AddTransactionForm() {
       ) : null}
 
       <label className="form-field">
-        <span className="form-label">Account</span>
+        <span className="form-label">{t('modal.account')}</span>
         <select
           value={form.accountId}
           onChange={(event) => updateField('accountId', event.target.value)}
@@ -136,7 +139,7 @@ function AddTransactionForm() {
           disabled={data.accounts.length === 0}
         >
           {data.accounts.length === 0 ? (
-            <option value="">Add an account first</option>
+            <option value="">{t('modal.addAccountFirst')}</option>
           ) : (
             data.accounts.map((account) => (
               <option key={account.id} value={account.id}>
@@ -148,17 +151,17 @@ function AddTransactionForm() {
       </label>
 
       <label className="form-field">
-        <span className="form-label">Note</span>
+        <span className="form-label">{t('modal.note')}</span>
         <input
           type="text"
-          placeholder="Taxi to university"
+          placeholder={t('modal.notePlaceholder')}
           value={form.note}
           onChange={(event) => updateField('note', event.target.value)}
         />
       </label>
 
       <label className="form-field">
-        <span className="form-label">Date</span>
+        <span className="form-label">{t('modal.date')}</span>
         <input
           type="date"
           required
@@ -177,7 +180,7 @@ function AddTransactionForm() {
           (needsCategory && categories.length === 0)
         }
       >
-        {saving ? 'Saving…' : saveLabel}
+        {saving ? t('modal.saving') : saveLabel}
       </button>
     </form>
   );

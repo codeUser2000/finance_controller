@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
+import { useLanguage } from '../../context/useLanguage.js';
 import { formatMoney } from '../../utils/formatMoney.js';
 
-const ACCOUNT_TYPES = [
-  { id: 'cash', label: 'Cash' },
-  { id: 'card', label: 'Card' },
-  { id: 'bank', label: 'Bank' },
-  { id: 'savings', label: 'Savings' },
-];
-
 export default function AccountModal({ open, account, onClose }) {
+  const { t } = useLanguage();
+
   return (
-    <Modal title={account ? 'Edit account' : 'Add account'} open={open} onClose={onClose}>
+    <Modal
+      title={account ? t('modal.editAccount') : t('modal.addAccount')}
+      open={open}
+      onClose={onClose}
+    >
       {open ? <AccountForm account={account} onClose={onClose} /> : null}
     </Modal>
   );
@@ -20,12 +20,20 @@ export default function AccountModal({ open, account, onClose }) {
 
 function AccountForm({ account, onClose }) {
   const { addAccount, updateAccount } = useFinance();
+  const { t } = useLanguage();
   const [name, setName] = useState(account?.name || '');
   const [type, setType] = useState(account?.type || 'card');
   const [balance, setBalance] = useState(account ? String(account.balance) : '0');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const isEdit = Boolean(account);
+
+  const accountTypes = [
+    { id: 'cash', label: t('accounts.cash') },
+    { id: 'card', label: t('accounts.card') },
+    { id: 'bank', label: t('accounts.bank') },
+    { id: 'savings', label: t('accounts.savings') },
+  ];
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -44,16 +52,14 @@ function AccountForm({ account, onClose }) {
   return (
     <form onSubmit={handleSubmit}>
       <p className="form-hint">
-        {isEdit
-          ? 'The balance changes when you add or delete transactions.'
-          : 'Accounts are where money sits. Start at 0 unless you already have cash there.'}
+        {isEdit ? t('modal.accountHintEdit') : t('modal.accountHintAdd')}
       </p>
 
       <label className="form-field">
-        <span className="form-label">Name</span>
+        <span className="form-label">{t('modal.name')}</span>
         <input
           type="text"
-          placeholder="Daily card"
+          placeholder={t('modal.dailyCardPlaceholder')}
           required
           autoFocus
           value={name}
@@ -65,9 +71,9 @@ function AccountForm({ account, onClose }) {
       </label>
 
       <div className="form-field">
-        <span className="form-label">Type</span>
+        <span className="form-label">{t('modal.type')}</span>
         <div className="segmented segmented-4">
-          {ACCOUNT_TYPES.map((option) => (
+          {accountTypes.map((option) => (
             <button
               key={option.id}
               type="button"
@@ -81,10 +87,12 @@ function AccountForm({ account, onClose }) {
       </div>
 
       {isEdit ? (
-        <p className="card-meta">Current balance: {formatMoney(account.balance)}</p>
+        <p className="card-meta">
+          {t('modal.currentBalance', { amount: formatMoney(account.balance) })}
+        </p>
       ) : (
         <label className="form-field">
-          <span className="form-label">Opening balance</span>
+          <span className="form-label">{t('modal.openingBalance')}</span>
           <div className="amount-field">
             <input
               type="number"
@@ -104,7 +112,11 @@ function AccountForm({ account, onClose }) {
 
       {error ? <p className="form-error">{error}</p> : null}
       <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
-        {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Save account'}
+        {saving
+          ? t('modal.saving')
+          : isEdit
+            ? t('modal.saveChanges')
+            : t('modal.saveAccount')}
       </button>
     </form>
   );

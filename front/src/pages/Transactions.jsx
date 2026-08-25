@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useFinance } from '../context/useFinance.js';
+import { useLanguage } from '../context/useLanguage.js';
 import { formatMoney } from '../utils/formatMoney.js';
 import {
   groupTransactions,
@@ -9,22 +10,20 @@ import {
 } from '../utils/dates.js';
 import TransactionRow from '../components/shared/TransactionRow.jsx';
 
-const filters = [
-  { id: 'all', label: 'All' },
-  { id: 'expense', label: 'Expenses' },
-  { id: 'income', label: 'Income' },
-  { id: 'transfer', label: 'Transfers' },
-];
-
 export default function Transactions() {
   const { data, getAccountName, openAdd, deleteTransaction } = useFinance();
+  const { t, locale } = useLanguage();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
-  const monthOptions = listMonthOptions(data.transactions, {
-    month: data.budgetMonth,
-    year: data.budgetYear,
-    label: data.month,
-  });
+  const monthOptions = listMonthOptions(
+    data.transactions,
+    {
+      month: data.budgetMonth,
+      year: data.budgetYear,
+      label: data.month,
+    },
+    locale,
+  );
   const [monthKey, setMonthKey] = useState(`${data.budgetYear}-${data.budgetMonth}`);
   const [selectedYear, selectedMonth] = monthKey.split('-').map(Number);
 
@@ -56,7 +55,7 @@ export default function Transactions() {
   const groups = groupTransactions(filtered);
 
   async function handleDelete(transaction) {
-    const confirmed = window.confirm('Delete this transaction and reverse the account balance?');
+    const confirmed = window.confirm(t('transactions.deleteConfirm'));
     if (!confirmed) return;
     await deleteTransaction(transaction.id);
   }
@@ -83,15 +82,22 @@ export default function Transactions() {
     .filter((item) => item.amount > 0)
     .sort((a, b) => b.amount - a.amount);
 
+  const filters = [
+    { id: 'all', label: t('transactions.all') },
+    { id: 'expense', label: t('transactions.expenses') },
+    { id: 'income', label: t('transactions.income') },
+    { id: 'transfer', label: t('transactions.transfers') },
+  ];
+
   return (
     <>
       <header className="page-header">
-        <h1 className="page-title">Transactions</h1>
-        <p className="page-subtitle">Your spending history, by month.</p>
+        <h1 className="page-title">{t('transactions.title')}</h1>
+        <p className="page-subtitle">{t('transactions.subtitle')}</p>
       </header>
 
       <label className="form-field">
-        <span className="form-label">Month</span>
+        <span className="form-label">{t('transactions.month')}</span>
         <select value={monthKey} onChange={(event) => setMonthKey(event.target.value)}>
           {monthOptions.map((option) => (
             <option key={`${option.year}-${option.month}`} value={`${option.year}-${option.month}`}>
@@ -104,15 +110,15 @@ export default function Transactions() {
       <section className="card">
         <div className="summary-grid">
           <div className="stat">
-            <div className="stat-label">Spent</div>
+            <div className="stat-label">{t('transactions.spent')}</div>
             <div className="stat-value">{formatMoney(monthSpent)}</div>
           </div>
           <div className="stat">
-            <div className="stat-label">Income</div>
+            <div className="stat-label">{t('transactions.income')}</div>
             <div className="stat-value">{formatMoney(monthIncome)}</div>
           </div>
           <div className="stat">
-            <div className="stat-label">Transactions</div>
+            <div className="stat-label">{t('transactions.count')}</div>
             <div className="stat-value">{monthlyTransactions.length}</div>
           </div>
         </div>
@@ -120,7 +126,7 @@ export default function Transactions() {
 
       {spentByCategory.length > 0 ? (
         <section className="section">
-          <h2 className="section-title">Where it went</h2>
+          <h2 className="section-title">{t('transactions.where')}</h2>
           <div className="card">
             <div className="breakdown-list">
               {spentByCategory.map((item) => (
@@ -139,7 +145,7 @@ export default function Transactions() {
           <Search size={16} />
           <input
             type="search"
-            placeholder="Search by name or category"
+            placeholder={t('transactions.search')}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
@@ -160,15 +166,15 @@ export default function Transactions() {
 
       {groups.length === 0 ? (
         <div className="card empty-state">
-          <p>No transactions this month.</p>
+          <p>{t('transactions.empty')}</p>
           <button type="button" className="btn btn-primary" onClick={openAdd}>
-            Add transaction
+            {t('transactions.add')}
           </button>
         </div>
       ) : (
         groups.map((group) => (
-          <section key={group.label} className="tx-group">
-            <h2 className="tx-group-title">{group.label}</h2>
+          <section key={group.key} className="tx-group">
+            <h2 className="tx-group-title">{t(`dateGroup.${group.key}`)}</h2>
             <div className="card">
               <div className="tx-list">
                 {group.items.map((transaction) => (

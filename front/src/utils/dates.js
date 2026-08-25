@@ -5,18 +5,18 @@ export function toInputDate(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-export function getGreeting() {
+export function getGreetingKey() {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return 'greeting.morning';
+  if (hour < 18) return 'greeting.afternoon';
+  return 'greeting.evening';
 }
 
-export function getBudgetPeriod(date = new Date()) {
+export function getBudgetPeriod(date = new Date(), locale = 'hy-AM') {
   return {
     month: date.getMonth() + 1,
     year: date.getFullYear(),
-    label: date.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+    label: date.toLocaleString(locale, { month: 'long', year: 'numeric' }),
   };
 }
 
@@ -43,19 +43,19 @@ export function isInPeriod(value, month, year) {
   return date.getMonth() + 1 === Number(month) && date.getFullYear() === Number(year);
 }
 
-export function formatMonthYear(month, year) {
-  return new Date(year, month - 1, 1).toLocaleString('en-US', {
+export function formatMonthYear(month, year, locale = 'hy-AM') {
+  return new Date(year, month - 1, 1).toLocaleString(locale, {
     month: 'long',
     year: 'numeric',
   });
 }
 
-export function listMonthOptions(transactions, currentPeriod) {
+export function listMonthOptions(transactions, currentPeriod, locale = 'hy-AM') {
   const map = new Map();
   map.set(`${currentPeriod.year}-${currentPeriod.month}`, {
     month: currentPeriod.month,
     year: currentPeriod.year,
-    label: currentPeriod.label,
+    label: formatMonthYear(currentPeriod.month, currentPeriod.year, locale),
   });
 
   for (const transaction of transactions) {
@@ -65,7 +65,7 @@ export function listMonthOptions(transactions, currentPeriod) {
     map.set(`${year}-${month}`, {
       month,
       year,
-      label: formatMonthYear(month, year),
+      label: formatMonthYear(month, year, locale),
     });
   }
 
@@ -78,9 +78,9 @@ export function getDateGroup(iso) {
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
 
-  if (isSameDay(date, today)) return 'Today';
-  if (isSameDay(date, yesterday)) return 'Yesterday';
-  return 'Earlier';
+  if (isSameDay(date, today)) return 'today';
+  if (isSameDay(date, yesterday)) return 'yesterday';
+  return 'earlier';
 }
 
 export function formatTime(iso) {
@@ -90,22 +90,22 @@ export function formatTime(iso) {
   });
 }
 
-export function formatShortDate(iso) {
-  return parseLocalDate(iso).toLocaleDateString('en-GB', {
+export function formatShortDate(iso, locale = 'hy-AM') {
+  return parseLocalDate(iso).toLocaleDateString(locale, {
     day: 'numeric',
     month: 'short',
   });
 }
 
 export function groupTransactions(transactions) {
-  const groups = { Today: [], Yesterday: [], Earlier: [] };
+  const groups = { today: [], yesterday: [], earlier: [] };
 
   for (const transaction of transactions) {
     groups[getDateGroup(transaction.occurredAt)].push(transaction);
   }
 
-  return ['Today', 'Yesterday', 'Earlier']
-    .map((label) => ({ label, items: groups[label] }))
+  return ['today', 'yesterday', 'earlier']
+    .map((key) => ({ key, items: groups[key] }))
     .filter((group) => group.items.length > 0);
 }
 

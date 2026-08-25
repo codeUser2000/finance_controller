@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getBudgetPeriod, isInPeriod } from '../utils/dates.js';
 import { FinanceContext } from './financeContext.js';
+import { useLanguage } from './useLanguage.js';
 import { api } from '../api/client.js';
 
 function mapAccount(account) {
@@ -20,9 +21,9 @@ function mapTransaction(transaction) {
     type: transaction.type,
     amount: Number(transaction.amount),
     categoryId: transaction.category_id,
-    category: transaction.Category?.name || (transaction.type === 'income' ? 'Income' : 'Transfer'),
+    category: transaction.Category?.name || '',
     accountId: transaction.account_id,
-    description: transaction.note || transaction.Category?.name || transaction.type,
+    description: transaction.note || transaction.Category?.name || '',
     occurredAt: transaction.occurred_at,
   };
 }
@@ -55,7 +56,8 @@ function mergeCategories(apiCategories, budgetItems, transactions, month, year) 
 }
 
 export function FinanceProvider({ children }) {
-  const period = getBudgetPeriod();
+  const { t, locale } = useLanguage();
+  const period = useMemo(() => getBudgetPeriod(new Date(), locale), [locale]);
   const [apiCategories, setApiCategories] = useState([]);
   const [budgetItems, setBudgetItems] = useState([]);
   const [accounts, setAccounts] = useState([]);
@@ -87,7 +89,7 @@ export function FinanceProvider({ children }) {
         await reload();
       } catch (loadError) {
         if (!cancelled) {
-          setError(loadError.message || 'Could not reach the server.');
+          setError(loadError.message || 'load-failed');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -137,9 +139,9 @@ export function FinanceProvider({ children }) {
 
   async function addTransaction({ type, amount, categoryId, accountId, note, date }) {
     const numericAmount = Number(amount);
-    if (!numericAmount || numericAmount <= 0) return 'Enter a valid amount.';
-    if (!accountId) return 'Choose an account.';
-    if (type === 'expense' && !categoryId) return 'Choose a category.';
+    if (!numericAmount || numericAmount <= 0) return t('errors.enterAmount');
+    if (!accountId) return t('errors.chooseAccount');
+    if (type === 'expense' && !categoryId) return t('errors.chooseCategory');
 
     try {
       await api.post('/transactions', {
@@ -161,11 +163,11 @@ export function FinanceProvider({ children }) {
   async function updateCategoryBudget(categoryId, budget) {
     const numericBudget = Number(budget);
     if (Number.isNaN(numericBudget) || numericBudget < 0) {
-      return 'Enter a valid budget amount.';
+      return t('errors.enterBudget');
     }
 
     const category = categories.find((item) => String(item.id) === String(categoryId));
-    if (!category) return 'Choose a category.';
+    if (!category) return t('errors.chooseCategory');
 
     try {
       if (category.budgetItemId) {
@@ -187,7 +189,7 @@ export function FinanceProvider({ children }) {
 
   async function addCategory({ name, type = 'expense' }) {
     const trimmed = name.trim();
-    if (!trimmed) return 'Enter a category name.';
+    if (!trimmed) return t('errors.enterCategoryName');
 
     try {
       await api.post('/categories', {
@@ -214,14 +216,14 @@ export function FinanceProvider({ children }) {
   async function addBudgetItem({ categoryId, name, budget }) {
     const numericBudget = Number(budget);
     if (Number.isNaN(numericBudget) || numericBudget < 0) {
-      return 'Enter a valid budget amount.';
+      return t('errors.enterBudget');
     }
 
     try {
       let nextCategoryId = categoryId;
       if (!nextCategoryId) {
         const trimmed = name.trim();
-        if (!trimmed) return 'Enter a category name.';
+        if (!trimmed) return t('errors.enterCategoryName');
         const created = await api.post('/categories', {
           name: trimmed,
           type: 'expense',
@@ -250,10 +252,10 @@ export function FinanceProvider({ children }) {
 
   async function addAccount({ name, type, balance }) {
     const trimmed = name.trim();
-    if (!trimmed) return 'Enter an account name.';
+    if (!trimmed) return t('errors.enterAccountName');
 
     const numericBalance = balance === '' || balance === undefined ? 0 : Number(balance);
-    if (Number.isNaN(numericBalance)) return 'Enter a valid opening balance.';
+    if (Number.isNaN(numericBalance)) return t('errors.enterOpeningBalance');
 
     const accountType = ['cash', 'card', 'bank', 'savings'].includes(type)
       ? type
@@ -275,7 +277,7 @@ export function FinanceProvider({ children }) {
 
   async function updateAccount(accountId, { name, type }) {
     const trimmed = name.trim();
-    if (!trimmed) return 'Enter an account name.';
+    if (!trimmed) return t('errors.enterAccountName');
 
     const accountType = ['cash', 'card', 'bank', 'savings'].includes(type)
       ? type

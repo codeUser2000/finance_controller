@@ -9,17 +9,20 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { useFinance } from '../../context/useFinance.js';
-
-const links = [
-  { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { to: '/budget', label: 'Budget', icon: Wallet },
-  { to: '/goals', label: 'Goals', icon: Target },
-  { to: '/accounts', label: 'Accounts', icon: Landmark },
-];
+import { useLanguage } from '../../context/useLanguage.js';
+import LanguageToggle from './LanguageToggle.jsx';
 
 export default function Sidebar() {
   const { openAdd } = useFinance();
+  const { t } = useLanguage();
+
+  const links = [
+    { to: '/', label: t('nav.home'), icon: Home, end: true },
+    { to: '/transactions', label: t('nav.transactions'), icon: ArrowLeftRight },
+    { to: '/budget', label: t('nav.budget'), icon: Wallet },
+    { to: '/goals', label: t('nav.goals'), icon: Target },
+    { to: '/accounts', label: t('nav.accounts'), icon: Landmark },
+  ];
 
   return (
     <aside className="sidebar">
@@ -27,9 +30,9 @@ export default function Sidebar() {
         <span className="brand-mark">
           <WalletCards size={18} />
         </span>
-        Money Manager
+        {t('appName')}
       </div>
-      <nav className="sidebar-nav" aria-label="Main">
+      <nav className="sidebar-nav" aria-label={t('nav.home')}>
         {links.map((link) => {
           const Icon = link.icon;
           return (
@@ -47,10 +50,13 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <button type="button" className="btn btn-primary btn-block sidebar-add" onClick={openAdd}>
-        <Plus size={18} />
-        Add transaction
-      </button>
+      <div className="sidebar-footer">
+        <LanguageToggle />
+        <button type="button" className="btn btn-primary btn-block sidebar-add" onClick={openAdd}>
+          <Plus size={18} />
+          {t('nav.addTransaction')}
+        </button>
+      </div>
     </aside>
   );
 }

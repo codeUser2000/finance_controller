@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { CreditCard, PiggyBank, Plus } from 'lucide-react';
 import { useFinance } from '../context/useFinance.js';
+import { useLanguage } from '../context/useLanguage.js';
 import { formatMoney } from '../utils/formatMoney.js';
 import AccountModal from '../components/accounts/AccountModal.jsx';
 
-function typeLabel(type) {
-  if (type === 'cash') return 'Cash';
-  if (type === 'bank') return 'Bank';
-  if (type === 'savings') return 'Savings';
-  return 'Card';
-}
-
 export default function Accounts() {
   const { data, deleteAccount } = useFinance();
+  const { t } = useLanguage();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+
+  function typeLabel(type) {
+    if (type === 'cash') return t('accounts.cash');
+    if (type === 'bank') return t('accounts.bank');
+    if (type === 'savings') return t('accounts.savings');
+    return t('accounts.card');
+  }
 
   function closeModal() {
     setModalOpen(false);
@@ -22,7 +24,7 @@ export default function Accounts() {
   }
 
   async function handleDelete(account) {
-    const confirmed = window.confirm(`Delete ${account.name}?`);
+    const confirmed = window.confirm(t('accounts.deleteConfirm', { name: account.name }));
     if (!confirmed) return;
     await deleteAccount(account.id);
   }
@@ -32,7 +34,7 @@ export default function Accounts() {
       <header className="page-header">
         <div className="page-header-top">
           <div>
-            <h1 className="page-title">Accounts</h1>
+            <h1 className="page-title">{t('accounts.title')}</h1>
           </div>
           <div className="page-actions">
             <button
@@ -44,24 +46,20 @@ export default function Accounts() {
               }}
             >
               <Plus size={16} />
-              Account
+              {t('accounts.account')}
             </button>
           </div>
         </div>
-        <p className="page-subtitle">
-          Where the money actually sits. Adding or deleting a transaction changes the balance.
-        </p>
+        <p className="page-subtitle">{t('accounts.subtitle')}</p>
       </header>
 
-      <p className="callout">
-        Expense removes money. Income adds money. Deleting a transaction reverses that change.
-      </p>
+      <p className="callout">{t('accounts.callout')}</p>
 
       {data.accounts.length === 0 ? (
         <div className="card empty-state">
-          <p>No accounts yet.</p>
+          <p>{t('accounts.empty')}</p>
           <button type="button" className="btn btn-primary" onClick={() => setModalOpen(true)}>
-            Add account
+            {t('accounts.add')}
           </button>
         </div>
       ) : (
@@ -94,14 +92,14 @@ export default function Accounts() {
                       setModalOpen(true);
                     }}
                   >
-                    Edit
+                    {t('accounts.edit')}
                   </button>
                   <button
                     type="button"
                     className="btn btn-ghost btn-small"
                     onClick={() => handleDelete(account)}
                   >
-                    Delete
+                    {t('accounts.delete')}
                   </button>
                 </div>
               </article>

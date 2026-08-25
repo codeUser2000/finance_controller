@@ -1,19 +1,21 @@
 import { NavLink } from 'react-router-dom';
 import { ArrowLeftRight, Home, Plus, Target, Wallet } from 'lucide-react';
 import { useFinance } from '../../context/useFinance.js';
-
-const links = [
-  { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { to: '/budget', label: 'Budget', icon: Wallet },
-  { to: '/goals', label: 'Goals', icon: Target },
-];
+import { useLanguage } from '../../context/useLanguage.js';
 
 export default function MobileNav() {
   const { openAdd } = useFinance();
+  const { t } = useLanguage();
+
+  const links = [
+    { to: '/', label: t('nav.home'), icon: Home, end: true },
+    { to: '/transactions', label: t('nav.transactions'), icon: ArrowLeftRight },
+    { to: '/budget', label: t('nav.budget'), icon: Wallet },
+    { to: '/goals', label: t('nav.goals'), icon: Target },
+  ];
 
   return (
-    <nav className="mobile-nav" aria-label="Mobile">
+    <nav className="mobile-nav" aria-label={t('nav.home')}>
       {links.slice(0, 2).map((link) => {
         const Icon = link.icon;
         return (
@@ -36,11 +38,11 @@ export default function MobileNav() {
           type="button"
           className="mobile-nav-add"
           onClick={openAdd}
-          aria-label="Add transaction"
+          aria-label={t('nav.addTransaction')}
         >
           <Plus size={22} />
         </button>
-        Add
+        {t('nav.add')}
       </div>
 
       {links.slice(2).map((link) => {

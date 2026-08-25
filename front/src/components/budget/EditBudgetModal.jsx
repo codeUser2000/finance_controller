@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
+import { useLanguage } from '../../context/useLanguage.js';
 
 export default function EditBudgetModal({ category, onClose }) {
   if (!category) return null;
@@ -12,6 +13,7 @@ export default function EditBudgetModal({ category, onClose }) {
 
 function EditBudgetForm({ category, onClose }) {
   const { updateCategoryBudget } = useFinance();
+  const { t } = useLanguage();
   const [budget, setBudget] = useState(category.budget);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -29,10 +31,10 @@ function EditBudgetForm({ category, onClose }) {
   }
 
   return (
-    <Modal title={`Edit ${category.name}`} open onClose={onClose}>
+    <Modal title={t('modal.editNamed', { name: category.name })} open onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <label className="form-field">
-          <span className="form-label">Monthly budget</span>
+          <span className="form-label">{t('modal.monthlyBudget')}</span>
           <div className="amount-field">
             <input
               type="number"
@@ -48,7 +50,7 @@ function EditBudgetForm({ category, onClose }) {
         </label>
         {error ? <p className="form-error">{error}</p> : null}
         <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
-          {saving ? 'Saving…' : 'Save budget'}
+          {saving ? t('modal.saving') : t('modal.saveBudget')}
         </button>
       </form>
     </Modal>

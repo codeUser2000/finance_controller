@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useFinance } from '../context/useFinance.js';
+import { useLanguage } from '../context/useLanguage.js';
 import { formatMoney, getBudgetTone } from '../utils/formatMoney.js';
 import CategoryIcon from '../components/shared/CategoryIcon.jsx';
 import ProgressBar from '../components/shared/ProgressBar.jsx';
@@ -10,6 +11,7 @@ import AddBudgetItemModal from '../components/budget/AddBudgetItemModal.jsx';
 
 export default function Budget() {
   const { data, remaining, deleteCategory } = useFinance();
+  const { t } = useLanguage();
   const [editing, setEditing] = useState(null);
   const [addingCategory, setAddingCategory] = useState(false);
   const [addingBudgetItem, setAddingBudgetItem] = useState(false);
@@ -20,7 +22,7 @@ export default function Budget() {
         <div className="page-header-top">
           <div>
             <p className="page-kicker">{data.month}</p>
-            <h1 className="page-title">Budget</h1>
+            <h1 className="page-title">{t('budget.title')}</h1>
           </div>
           <div className="page-actions">
             <button
@@ -29,7 +31,7 @@ export default function Budget() {
               onClick={() => setAddingCategory(true)}
             >
               <Plus size={16} />
-              Category
+              {t('budget.category')}
             </button>
             <button
               type="button"
@@ -37,34 +39,32 @@ export default function Budget() {
               onClick={() => setAddingBudgetItem(true)}
             >
               <Plus size={16} />
-              Budget item
+              {t('budget.budgetItem')}
             </button>
           </div>
         </div>
-        <p className="page-subtitle">
-          Monthly spending limits. This is not the same as your savings.
-        </p>
+        <p className="page-subtitle">{t('budget.subtitle')}</p>
       </header>
 
       <section className="card">
-        <p className="spendable-label">Left this month</p>
+        <p className="spendable-label">{t('budget.leftThisMonth')}</p>
         <p className={`spendable-amount amount ${remaining < 0 ? 'amount-danger' : ''}`}>
           {formatMoney(remaining)}
         </p>
         <p className="spendable-meta">
-          of {formatMoney(data.spendingBudget)} you started with
+          {t('budget.startedWith', { total: formatMoney(data.spendingBudget) })}
         </p>
         <div className="summary-grid">
           <div className="stat">
-            <div className="stat-label">Had</div>
+            <div className="stat-label">{t('budget.had')}</div>
             <div className="stat-value">{formatMoney(data.spendingBudget)}</div>
           </div>
           <div className="stat">
-            <div className="stat-label">Spent</div>
+            <div className="stat-label">{t('budget.spent')}</div>
             <div className="stat-value">{formatMoney(data.spent)}</div>
           </div>
           <div className="stat">
-            <div className="stat-label">Left</div>
+            <div className="stat-label">{t('budget.left')}</div>
             <div className={`stat-value ${remaining < 0 ? 'amount-danger' : ''}`}>
               {formatMoney(remaining)}
             </div>
@@ -74,13 +74,13 @@ export default function Budget() {
 
       {data.categories.length === 0 ? (
         <div className="card empty-state">
-          <p>No budget items yet.</p>
+          <p>{t('budget.empty')}</p>
           <button
             type="button"
             className="btn btn-primary"
             onClick={() => setAddingBudgetItem(true)}
           >
-            Add budget item
+            {t('budget.addItem')}
           </button>
         </div>
       ) : (
@@ -96,10 +96,16 @@ export default function Budget() {
                     <p className="card-name">{category.name}</p>
                     <p className="card-meta">
                       {category.budget === 0
-                        ? 'No budget set'
+                        ? t('budget.noBudgetSet')
                         : leftover < 0
-                          ? `${formatMoney(Math.abs(leftover))} over of ${formatMoney(category.budget)}`
-                          : `${formatMoney(leftover)} left of ${formatMoney(category.budget)}`}
+                          ? t('budget.overOf', {
+                              over: formatMoney(Math.abs(leftover)),
+                              total: formatMoney(category.budget),
+                            })
+                          : t('budget.leftOf', {
+                              left: formatMoney(leftover),
+                              total: formatMoney(category.budget),
+                            })}
                     </p>
                   </div>
                   <div className="account-actions">
@@ -108,32 +114,34 @@ export default function Budget() {
                       className="btn btn-ghost btn-small"
                       onClick={() => setEditing(category)}
                     >
-                      Edit
+                      {t('budget.edit')}
                     </button>
                     <button
                       type="button"
                       className="btn btn-ghost btn-small"
                       onClick={async () => {
-                        const confirmed = window.confirm(`Delete ${category.name}?`);
+                        const confirmed = window.confirm(
+                          t('budget.deleteConfirm', { name: category.name }),
+                        );
                         if (!confirmed) return;
                         await deleteCategory(category.id);
                       }}
                     >
-                      Delete
+                      {t('budget.delete')}
                     </button>
                   </div>
                 </div>
                 <div className="budget-row-figures">
                   <div>
-                    Had
+                    {t('budget.had')}
                     <strong>{formatMoney(category.budget)}</strong>
                   </div>
                   <div>
-                    Spent
+                    {t('budget.spent')}
                     <strong>{formatMoney(category.spent)}</strong>
                   </div>
                   <div>
-                    Left
+                    {t('budget.left')}
                     <strong className={leftover < 0 ? 'amount-danger' : ''}>
                       {formatMoney(leftover)}
                     </strong>

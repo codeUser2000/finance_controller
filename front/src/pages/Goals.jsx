@@ -1,22 +1,22 @@
 import { PiggyBank } from 'lucide-react';
 import { useFinance } from '../context/useFinance.js';
+import { useLanguage } from '../context/useLanguage.js';
 import { formatMoney } from '../utils/formatMoney.js';
 
 export default function Goals() {
   const { data } = useFinance();
+  const { t } = useLanguage();
 
   return (
     <>
       <header className="page-header">
-        <h1 className="page-title">Goals</h1>
-        <p className="page-subtitle">
-          Savings accounts from your backend. Empty until you add one.
-        </p>
+        <h1 className="page-title">{t('goals.title')}</h1>
+        <p className="page-subtitle">{t('goals.subtitle')}</p>
       </header>
 
       {data.savingsAccounts.length === 0 ? (
         <div className="card empty-state">
-          <p>No savings accounts yet.</p>
+          <p>{t('goals.empty')}</p>
         </div>
       ) : (
         <div className="savings-grid">

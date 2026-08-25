@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useFinance } from '../context/useFinance.js';
-import { getGreeting } from '../utils/dates.js';
+import { useLanguage } from '../context/useLanguage.js';
+import { getGreetingKey } from '../utils/dates.js';
 import { formatMoney } from '../utils/formatMoney.js';
 import SpendableCard from '../components/dashboard/SpendableCard.jsx';
 import BudgetCard from '../components/dashboard/BudgetCard.jsx';
@@ -8,11 +9,12 @@ import RecentTransactions from '../components/dashboard/RecentTransactions.jsx';
 
 export default function Dashboard() {
   const { data } = useFinance();
+  const { t } = useLanguage();
 
   return (
     <>
       <header className="page-header">
-        <p className="page-kicker">{getGreeting()}</p>
+        <p className="page-kicker">{t(getGreetingKey())}</p>
         <h1 className="page-title">{data.month}</h1>
       </header>
 
@@ -20,13 +22,13 @@ export default function Dashboard() {
 
       <section className="section">
         <div className="section-header">
-          <h2 className="section-title">Monthly budget</h2>
+          <h2 className="section-title">{t('dashboard.monthlyBudget')}</h2>
           <Link to="/budget" className="section-link">
-            View all
+            {t('dashboard.viewAll')}
           </Link>
         </div>
         {data.categories.length === 0 ? (
-          <p className="empty-copy">No categories yet. Add one from Budget.</p>
+          <p className="empty-copy">{t('dashboard.noCategories')}</p>
         ) : (
           <div className="budget-grid">
             {data.categories.map((category) => (
@@ -39,13 +41,13 @@ export default function Dashboard() {
       <div className="dashboard-lower">
         <section className="section">
           <div className="section-header">
-            <h2 className="section-title">Savings accounts</h2>
+            <h2 className="section-title">{t('dashboard.savingsAccounts')}</h2>
             <Link to="/accounts" className="section-link">
-              View accounts
+              {t('dashboard.viewAccounts')}
             </Link>
           </div>
           {data.savingsAccounts.length === 0 ? (
-            <p className="empty-copy">No savings accounts yet.</p>
+            <p className="empty-copy">{t('dashboard.noSavings')}</p>
           ) : (
             <div className="savings-grid">
               {data.savingsAccounts.map((account) => (

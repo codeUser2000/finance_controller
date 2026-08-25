@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
+import { useLanguage } from '../../context/useLanguage.js';
 
 export default function AddBudgetItemModal({ open, onClose }) {
+  const { t } = useLanguage();
+
   return (
-    <Modal title="Add budget item" open={open} onClose={onClose}>
+    <Modal title={t('modal.addBudgetItem')} open={open} onClose={onClose}>
       {open ? <AddBudgetItemForm onClose={onClose} /> : null}
     </Modal>
   );
@@ -12,6 +15,7 @@ export default function AddBudgetItemModal({ open, onClose }) {
 
 function AddBudgetItemForm({ onClose }) {
   const { data, addBudgetItem } = useFinance();
+  const { t } = useLanguage();
   const hasCategories = data.categories.length > 0;
   const [mode, setMode] = useState(hasCategories ? 'existing' : 'new');
   const [categoryId, setCategoryId] = useState(data.categories[0]?.id || '');
@@ -38,27 +42,25 @@ function AddBudgetItemForm({ onClose }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <p className="form-hint">
-        A budget item is a monthly spending limit for a category.
-      </p>
+      <p className="form-hint">{t('modal.budgetHint')}</p>
 
       {hasCategories ? (
         <div className="form-field">
-          <span className="form-label">Assign to</span>
+          <span className="form-label">{t('modal.assignTo')}</span>
           <div className="segmented segmented-2">
             <button
               type="button"
               className={mode === 'existing' ? 'is-active' : ''}
               onClick={() => setMode('existing')}
             >
-              Existing
+              {t('modal.existing')}
             </button>
             <button
               type="button"
               className={mode === 'new' ? 'is-active' : ''}
               onClick={() => setMode('new')}
             >
-              New category
+              {t('modal.newCategory')}
             </button>
           </div>
         </div>
@@ -66,7 +68,7 @@ function AddBudgetItemForm({ onClose }) {
 
       {mode === 'existing' && hasCategories ? (
         <label className="form-field">
-          <span className="form-label">Category</span>
+          <span className="form-label">{t('modal.category')}</span>
           <select
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value)}
@@ -80,10 +82,10 @@ function AddBudgetItemForm({ onClose }) {
         </label>
       ) : (
         <label className="form-field">
-          <span className="form-label">Category name</span>
+          <span className="form-label">{t('modal.categoryName')}</span>
           <input
             type="text"
-            placeholder="Subscriptions"
+            placeholder={t('modal.subscriptionsPlaceholder')}
             required
             value={name}
             onChange={(event) => {
@@ -95,7 +97,7 @@ function AddBudgetItemForm({ onClose }) {
       )}
 
       <label className="form-field">
-        <span className="form-label">Monthly budget</span>
+        <span className="form-label">{t('modal.monthlyBudget')}</span>
         <div className="amount-field">
           <input
             type="number"
@@ -115,7 +117,7 @@ function AddBudgetItemForm({ onClose }) {
       </label>
       {error ? <p className="form-error">{error}</p> : null}
       <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
-        {saving ? 'Saving…' : 'Save budget item'}
+        {saving ? t('modal.saving') : t('modal.saveBudgetItem')}
       </button>
     </form>
   );

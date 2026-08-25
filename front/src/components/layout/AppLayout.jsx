@@ -2,11 +2,14 @@ import { Link, Outlet } from 'react-router-dom';
 import { Landmark, WalletCards } from 'lucide-react';
 import Sidebar from './Sidebar.jsx';
 import MobileNav from './MobileNav.jsx';
+import LanguageToggle from './LanguageToggle.jsx';
 import AddTransactionModal from '../transactions/AddTransactionModal.jsx';
 import { useFinance } from '../../context/useFinance.js';
+import { useLanguage } from '../../context/useLanguage.js';
 
 export default function AppLayout() {
   const { loading, error } = useFinance();
+  const { t } = useLanguage();
 
   return (
     <div className="app-shell">
@@ -17,20 +20,18 @@ export default function AppLayout() {
             <span className="brand-mark">
               <WalletCards size={18} />
             </span>
-            Money Manager
+            {t('appName')}
           </Link>
-          <Link to="/accounts" className="icon-button" aria-label="Accounts">
-            <Landmark size={18} />
-          </Link>
+          <div className="mobile-topbar-actions">
+            <LanguageToggle compact />
+            <Link to="/accounts" className="icon-button" aria-label={t('nav.accounts')}>
+              <Landmark size={18} />
+            </Link>
+          </div>
         </header>
         <main className="app-content">
-          {error ? (
-            <p className="app-banner">
-              Could not load data from the server. Start the backend on port 3000,
-              then refresh.
-            </p>
-          ) : null}
-          {loading ? <p className="loading-copy">Loading your money…</p> : <Outlet />}
+          {error ? <p className="app-banner">{t('errors.loadFailed')}</p> : null}
+          {loading ? <p className="loading-copy">{t('errors.loading')}</p> : <Outlet />}
         </main>
       </div>
       <MobileNav />
