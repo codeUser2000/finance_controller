@@ -27,6 +27,11 @@ async function migrate() {
     await addColumnIfMissing('categories', 'user_id', userIdColumn);
     await addColumnIfMissing('accounts', 'user_id', userIdColumn);
     await addColumnIfMissing('transactions', 'user_id', userIdColumn);
+    await addColumnIfMissing('budget_items', 'is_active', {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    });
 
     console.log('Database tables created if they did not already exist.');
     process.exit(0);

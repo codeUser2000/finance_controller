@@ -48,11 +48,21 @@ function mergeCategories(apiCategories, budgetItems, transactions, month, year) 
       type: category.type,
       icon: category.icon,
       color: category.color,
+      isActive: category.is_active !== false && Number(category.is_active) !== 0,
+      budgetActive: budgetItem
+        ? budgetItem.is_active !== false && Number(budgetItem.is_active) !== 0
+        : false,
       budget: budgetItem ? Number(budgetItem.amount) : 0,
       spent,
       budgetItemId: budgetItem?.id ?? null,
     };
   });
+}
+
+function isTracked(category) {
+  if (!category.isActive) return false;
+  if (category.budgetItemId && !category.budgetActive) return false;
+  return true;
 }
 
 export function FinanceProvider({ children }) {
@@ -107,8 +117,9 @@ export function FinanceProvider({ children }) {
     [apiCategories, budgetItems, transactions, period.month, period.year],
   );
 
-  const spendingBudget = categories.reduce((sum, category) => sum + category.budget, 0);
-  const spent = categories.reduce((sum, category) => sum + category.spent, 0);
+  const trackedCategories = categories.filter(isTracked);
+  const spendingBudget = trackedCategories.reduce((sum, category) => sum + category.budget, 0);
+  const spent = trackedCategories.reduce((sum, category) => sum + category.spent, 0);
   const savingsAccounts = accounts.filter((account) => account.type === 'savings');
 
   const data = {
@@ -203,9 +214,39 @@ export function FinanceProvider({ children }) {
     }
   }
 
+  async function setCategoryActive(categoryId, isActive) {
+    try {
+      await api.put(`/categories/${categoryId}`, { is_active: isActive });
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
   async function deleteCategory(categoryId) {
     try {
       await api.delete(`/categories/${categoryId}`);
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
+  async function setBudgetItemActive(budgetItemId, isActive) {
+    try {
+      await api.put(`/budgets/${budgetItemId}`, { is_active: isActive });
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
+  async function deleteBudgetItem(budgetItemId) {
+    try {
+      await api.delete(`/budgets/${budgetItemId}`);
       await reload();
       return null;
     } catch (saveError) {
@@ -329,7 +370,10 @@ export function FinanceProvider({ children }) {
         deleteTransaction,
         updateCategoryBudget,
         addCategory,
+        setCategoryActive,
         deleteCategory,
+        setBudgetItemActive,
+        deleteBudgetItem,
         addBudgetItem,
         addAccount,
         updateAccount,

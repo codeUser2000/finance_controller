@@ -34,6 +34,10 @@ function validateBudget(body, { partial = false } = {}) {
     }
   }
 
+  if (body.is_active !== undefined && typeof body.is_active !== 'boolean') {
+    return 'is_active must be a boolean';
+  }
+
   return null;
 }
 
@@ -51,6 +55,9 @@ function toBudgetPayload(body, { partial = false } = {}) {
   }
   if (!partial || body.amount !== undefined) {
     payload.amount = body.amount;
+  }
+  if (!partial || body.is_active !== undefined) {
+    payload.is_active = body.is_active;
   }
 
   return payload;

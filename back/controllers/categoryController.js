@@ -1,9 +1,9 @@
-import { Category } from '../models/index.js';
+import { BudgetItem, Category, Transaction, sequelize } from '../models/index.js';
 
 const CATEGORY_TYPES = ['expense', 'income'];
 
 function owned(req) {
-  return { user_id: req.user.id, is_active: true };
+  return { user_id: req.user.id };
 }
 
 function validateCategory(body, { partial = false } = {}) {
@@ -20,6 +20,10 @@ function validateCategory(body, { partial = false } = {}) {
     if (!CATEGORY_TYPES.includes(body.type)) {
       return 'type must be expense or income';
     }
+  }
+
+  if (body.is_active !== undefined && typeof body.is_active !== 'boolean') {
+    return 'is_active must be a boolean';
   }
 
   return null;
@@ -40,6 +44,9 @@ function toCategoryPayload(body, { partial = false } = {}) {
   if (!partial || body.type !== undefined) {
     payload.type = body.type;
   }
+  if (!partial || body.is_active !== undefined) {
+    payload.is_active = body.is_active;
+  }
 
   return payload;
 }
@@ -48,7 +55,10 @@ export async function list(req, res) {
   try {
     const categories = await Category.findAll({
       where: owned(req),
-      order: [['name', 'ASC']],
+      order: [
+        ['is_active', 'DESC'],
+        ['name', 'ASC'],
+      ],
     });
     res.json({ success: true, data: categories });
   } catch (error) {
@@ -82,6 +92,7 @@ export async function create(req, res) {
     const category = await Category.create({
       ...toCategoryPayload(req.body),
       user_id: req.user.id,
+      is_active: true,
     });
     res.status(201).json({ success: true, data: category });
   } catch (error) {
@@ -121,7 +132,18 @@ export async function remove(req, res) {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
 
-    await category.update({ is_active: false });
+    await sequelize.transaction(async (t) => {
+      await Transaction.update(
+        { category_id: null },
+        { where: { category_id: category.id, user_id: req.user.id }, transaction: t },
+      );
+      await BudgetItem.destroy({
+        where: { category_id: category.id },
+        transaction: t,
+      });
+      await category.destroy({ transaction: t });
+    });
+
     res.json({ success: true, data: category });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

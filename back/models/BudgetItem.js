@@ -29,6 +29,11 @@ export default function defineBudgetItem(sequelize) {
         type: DataTypes.DECIMAL(15, 2),
         allowNull: false,
       },
+      is_active: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
     },
     {
       tableName: 'budget_items',
