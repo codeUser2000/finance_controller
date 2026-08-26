@@ -32,13 +32,15 @@ export default function Dashboard() {
             {t('dashboard.viewAll')}
           </Link>
         </div>
-        {data.categories.length === 0 ? (
+        {data.categories.filter((category) => category.isActive).length === 0 ? (
           <p className="empty-copy">{t('dashboard.noCategories')}</p>
         ) : (
           <div className="budget-grid">
-            {data.categories.map((category) => (
-              <BudgetCard key={category.id} category={category} />
-            ))}
+            {data.categories
+              .filter((category) => category.isActive)
+              .map((category) => (
+                <BudgetCard key={category.id} category={category} />
+              ))}
           </div>
         )}
       </section>

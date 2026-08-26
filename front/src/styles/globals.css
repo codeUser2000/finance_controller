@@ -214,15 +214,27 @@ textarea {
 }
 
 .icon-button {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 10px;
   color: var(--color-primary);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+}
+
+.icon-button:hover {
+  background: #f2f4f7;
+}
+
+.icon-button.is-danger {
+  color: var(--color-danger);
+}
+
+.icon-button.is-danger:hover {
+  background: #fee2e2;
 }
 
 .sidebar {
@@ -644,6 +656,12 @@ textarea {
 .budget-row-head .account-actions {
   margin-top: 0;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.budget-row.is-inactive {
+  opacity: 0.58;
 }
 
 .tx-group {

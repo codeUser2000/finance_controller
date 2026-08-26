@@ -16,9 +16,10 @@ export default function AddBudgetItemModal({ open, onClose }) {
 function AddBudgetItemForm({ onClose }) {
   const { data, addBudgetItem } = useFinance();
   const { t } = useLanguage();
-  const hasCategories = data.categories.length > 0;
+  const activeCategories = data.categories.filter((category) => category.isActive);
+  const hasCategories = activeCategories.length > 0;
   const [mode, setMode] = useState(hasCategories ? 'existing' : 'new');
-  const [categoryId, setCategoryId] = useState(data.categories[0]?.id || '');
+  const [categoryId, setCategoryId] = useState(activeCategories[0]?.id || '');
   const [name, setName] = useState('');
   const [budget, setBudget] = useState('');
   const [error, setError] = useState('');
@@ -73,7 +74,7 @@ function AddBudgetItemForm({ onClose }) {
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value)}
           >
-            {data.categories.map((category) => (
+            {activeCategories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>

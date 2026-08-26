@@ -16,11 +16,12 @@ export default function AddTransactionModal() {
 }
 
 function categoriesForType(type, categories) {
+  const active = categories.filter((category) => category.isActive);
   if (type === 'income') {
-    return categories.filter((category) => category.type === 'income');
+    return active.filter((category) => category.type === 'income');
   }
   if (type === 'transfer') return [];
-  return categories.filter((category) => category.type === 'expense');
+  return active.filter((category) => category.type === 'expense');
 }
 
 function AddTransactionForm() {
@@ -29,7 +30,9 @@ function AddTransactionForm() {
   const [form, setForm] = useState({
     type: 'expense',
     amount: '',
-    categoryId: data.categories.find((category) => category.type === 'expense')?.id || '',
+    categoryId:
+      data.categories.find((category) => category.type === 'expense' && category.isActive)?.id ||
+      '',
     accountId: data.accounts[0]?.id || '',
     note: '',
     date: toInputDate(),

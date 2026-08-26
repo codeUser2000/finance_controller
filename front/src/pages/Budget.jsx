@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  CircleX,
   Eye,
   EyeOff,
   Pause,
@@ -202,27 +203,17 @@ export default function Budget() {
                           danger
                           onClick={() => handleDeleteBudget(category)}
                         >
-                          <Trash2 size={16} />
+                          <CircleX size={16} />
                         </IconAction>
                       </>
-                    ) : (
-                      <IconAction
-                        label={t('budget.deleteForever')}
-                        danger
-                        onClick={() => handleDeleteCategory(category)}
-                      >
-                        <Trash2 size={16} />
-                      </IconAction>
-                    )}
-                    {category.budgetItemId ? (
-                      <IconAction
-                        label={t('budget.deleteForever')}
-                        danger
-                        onClick={() => handleDeleteCategory(category)}
-                      >
-                        <Trash2 size={16} />
-                      </IconAction>
                     ) : null}
+                    <IconAction
+                      label={t('budget.deleteForever')}
+                      danger
+                      onClick={() => handleDeleteCategory(category)}
+                    >
+                      <Trash2 size={16} />
+                    </IconAction>
                   </div>
                 </div>
                 <div className="budget-row-figures">

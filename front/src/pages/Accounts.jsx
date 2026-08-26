@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreditCard, PiggyBank, Plus } from 'lucide-react';
+import { CreditCard, Pencil, PiggyBank, Plus, Trash2 } from 'lucide-react';
 import { useFinance } from '../context/useFinance.js';
 import { useLanguage } from '../context/useLanguage.js';
 import { formatMoney } from '../utils/formatMoney.js';
@@ -86,20 +86,24 @@ export default function Accounts() {
                 <div className="account-actions">
                   <button
                     type="button"
-                    className="btn btn-ghost btn-small"
+                    className="icon-button"
+                    aria-label={t('accounts.edit')}
+                    title={t('accounts.edit')}
                     onClick={() => {
                       setEditing(account);
                       setModalOpen(true);
                     }}
                   >
-                    {t('accounts.edit')}
+                    <Pencil size={16} />
                   </button>
                   <button
                     type="button"
-                    className="btn btn-ghost btn-small"
+                    className="icon-button is-danger"
+                    aria-label={t('accounts.delete')}
+                    title={t('accounts.delete')}
                     onClick={() => handleDelete(account)}
                   >
-                    {t('accounts.delete')}
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </article>
