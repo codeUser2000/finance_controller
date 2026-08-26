@@ -46,6 +46,8 @@ export default function Budget() {
   const [addingCategory, setAddingCategory] = useState(false);
   const [addingBudgetItem, setAddingBudgetItem] = useState(false);
 
+  const budgetItems = data.categories.filter((category) => category.budgetItemId);
+
   async function handleToggleCategory(category) {
     await setCategoryActive(category.id, !category.isActive);
   }
@@ -128,39 +130,97 @@ export default function Budget() {
         </div>
       </section>
 
-      {data.categories.length === 0 ? (
-        <div className="card empty-state">
-          <p>{t('budget.empty')}</p>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => setAddingBudgetItem(true)}
-          >
-            {t('budget.addItem')}
-          </button>
+      <section className="section">
+        <div className="section-header">
+          <h2 className="section-title">{t('budget.categoriesTitle')}</h2>
         </div>
-      ) : (
-        <section className="section budget-rows">
-          {data.categories.map((category) => {
-            const leftover = category.budget - category.spent;
-            const tone = getBudgetTone(category.spent, category.budget);
-            const inactive = !category.isActive || (category.budgetItemId && !category.budgetActive);
-            return (
+        {data.categories.length === 0 ? (
+          <div className="card empty-state">
+            <p>{t('budget.emptyCategories')}</p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setAddingCategory(true)}
+            >
+              {t('budget.category')}
+            </button>
+          </div>
+        ) : (
+          <div className="category-list">
+            {data.categories.map((category) => (
               <article
                 key={category.id}
-                className={`card budget-row ${inactive ? 'is-inactive' : ''}`}
+                className={`card category-row ${category.isActive ? '' : 'is-inactive'}`}
               >
-                <div className="budget-row-head">
-                  <CategoryIcon name={category.name} tone={tone} />
-                  <div className="budget-row-copy">
-                    <p className="card-name">{category.name}</p>
-                    <p className="card-meta">
-                      {!category.isActive
-                        ? t('budget.inactiveCategory')
-                        : category.budgetItemId && !category.budgetActive
-                          ? t('budget.inactiveBudget')
-                          : category.budget === 0
-                            ? t('budget.noBudgetSet')
+                <CategoryIcon name={category.name} />
+                <div className="budget-row-copy">
+                  <p className="card-name">{category.name}</p>
+                  <p className="card-meta">
+                    {category.isActive
+                      ? t(`types.${category.type}`)
+                      : t('budget.inactiveCategory')}
+                  </p>
+                </div>
+                <div className="account-actions">
+                  <IconAction
+                    label={
+                      category.isActive
+                        ? t('budget.deactivateCategory')
+                        : t('budget.activateCategory')
+                    }
+                    onClick={() => handleToggleCategory(category)}
+                  >
+                    {category.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </IconAction>
+                  <IconAction
+                    label={t('budget.deleteForever')}
+                    danger
+                    onClick={() => handleDeleteCategory(category)}
+                  >
+                    <Trash2 size={16} />
+                  </IconAction>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="section">
+        <div className="section-header">
+          <h2 className="section-title">{t('budget.budgetItemsTitle')}</h2>
+        </div>
+        {budgetItems.length === 0 ? (
+          <div className="card empty-state">
+            <p>{t('budget.empty')}</p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setAddingBudgetItem(true)}
+            >
+              {t('budget.addItem')}
+            </button>
+          </div>
+        ) : (
+          <div className="budget-rows">
+            {budgetItems.map((category) => {
+              const leftover = category.budget - category.spent;
+              const tone = getBudgetTone(category.spent, category.budget);
+              const inactive = !category.isActive || !category.budgetActive;
+              return (
+                <article
+                  key={category.budgetItemId}
+                  className={`card budget-row ${inactive ? 'is-inactive' : ''}`}
+                >
+                  <div className="budget-row-head">
+                    <CategoryIcon name={category.name} tone={tone} />
+                    <div className="budget-row-copy">
+                      <p className="card-name">{category.name}</p>
+                      <p className="card-meta">
+                        {!category.isActive
+                          ? t('budget.inactiveCategory')
+                          : !category.budgetActive
+                            ? t('budget.inactiveBudget')
                             : leftover < 0
                               ? t('budget.overOf', {
                                   over: formatMoney(Math.abs(leftover)),
@@ -170,74 +230,54 @@ export default function Budget() {
                                   left: formatMoney(leftover),
                                   total: formatMoney(category.budget),
                                 })}
-                    </p>
+                      </p>
+                    </div>
+                    <div className="account-actions">
+                      <IconAction label={t('budget.edit')} onClick={() => setEditing(category)}>
+                        <Pencil size={16} />
+                      </IconAction>
+                      <IconAction
+                        label={
+                          category.budgetActive
+                            ? t('budget.deactivateBudget')
+                            : t('budget.activateBudget')
+                        }
+                        onClick={() => handleToggleBudget(category)}
+                      >
+                        {category.budgetActive ? <Pause size={16} /> : <Play size={16} />}
+                      </IconAction>
+                      <IconAction
+                        label={t('budget.deleteBudget')}
+                        danger
+                        onClick={() => handleDeleteBudget(category)}
+                      >
+                        <CircleX size={16} />
+                      </IconAction>
+                    </div>
                   </div>
-                  <div className="account-actions">
-                    <IconAction label={t('budget.edit')} onClick={() => setEditing(category)}>
-                      <Pencil size={16} />
-                    </IconAction>
-                    <IconAction
-                      label={
-                        category.isActive
-                          ? t('budget.deactivateCategory')
-                          : t('budget.activateCategory')
-                      }
-                      onClick={() => handleToggleCategory(category)}
-                    >
-                      {category.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </IconAction>
-                    {category.budgetItemId ? (
-                      <>
-                        <IconAction
-                          label={
-                            category.budgetActive
-                              ? t('budget.deactivateBudget')
-                              : t('budget.activateBudget')
-                          }
-                          onClick={() => handleToggleBudget(category)}
-                        >
-                          {category.budgetActive ? <Pause size={16} /> : <Play size={16} />}
-                        </IconAction>
-                        <IconAction
-                          label={t('budget.deleteBudget')}
-                          danger
-                          onClick={() => handleDeleteBudget(category)}
-                        >
-                          <CircleX size={16} />
-                        </IconAction>
-                      </>
-                    ) : null}
-                    <IconAction
-                      label={t('budget.deleteForever')}
-                      danger
-                      onClick={() => handleDeleteCategory(category)}
-                    >
-                      <Trash2 size={16} />
-                    </IconAction>
+                  <div className="budget-row-figures">
+                    <div>
+                      {t('budget.had')}
+                      <strong>{formatMoney(category.budget)}</strong>
+                    </div>
+                    <div>
+                      {t('budget.spent')}
+                      <strong>{formatMoney(category.spent)}</strong>
+                    </div>
+                    <div>
+                      {t('budget.left')}
+                      <strong className={leftover < 0 ? 'amount-danger' : ''}>
+                        {formatMoney(leftover)}
+                      </strong>
+                    </div>
                   </div>
-                </div>
-                <div className="budget-row-figures">
-                  <div>
-                    {t('budget.had')}
-                    <strong>{formatMoney(category.budget)}</strong>
-                  </div>
-                  <div>
-                    {t('budget.spent')}
-                    <strong>{formatMoney(category.spent)}</strong>
-                  </div>
-                  <div>
-                    {t('budget.left')}
-                    <strong className={leftover < 0 ? 'amount-danger' : ''}>
-                      {formatMoney(leftover)}
-                    </strong>
-                  </div>
-                </div>
-                <ProgressBar value={category.spent} max={category.budget} tone={tone} />
-              </article>
-            );
-          })}
-        </section>
-      )}
+                  <ProgressBar value={category.spent} max={category.budget} tone={tone} />
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <EditBudgetModal category={editing} onClose={() => setEditing(null)} />
       <AddCategoryModal

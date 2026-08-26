@@ -765,10 +765,21 @@ textarea {
   color: var(--color-primary);
 }
 
-.budget-rows {
+.budget-rows,
+.category-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.category-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.category-row .account-actions {
+  margin-top: 0;
 }
 
 .budget-row {
