@@ -10,15 +10,15 @@ export default function SavingsCard({ goal }) {
   return (
     <article className="card savings-card">
       <div className="savings-card-top">
-        <span className="icon-badge icon-badge--success">
+        <span className="icon-badge icon-badge--secondary">
           <Icon size={18} strokeWidth={1.75} />
         </span>
         <p className="savings-percent">{percent}%</p>
       </div>
       <p className="card-name">{goal.name}</p>
       <p className="card-meta">{formatMoney(goal.current)}</p>
-      <ProgressBar value={goal.current} max={goal.target} tone="success" />
-      <p className="card-remaining is-success">{formatMoney(remaining)} remaining</p>
+      <ProgressBar value={goal.current} max={goal.target} tone="secondary" />
+      <p className="card-remaining is-secondary">{formatMoney(remaining)} remaining</p>
     </article>
   );
 }

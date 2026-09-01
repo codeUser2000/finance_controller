@@ -9,12 +9,12 @@ export default function GoalCard({ goal }) {
   const percent = formatPercent(goal.current, goal.target);
 
   return (
-    <article className="card savings-card">
+    <article className="card goal-card">
       <div className="savings-card-top">
-        <span className="icon-badge icon-badge--success">
+        <span className="icon-badge icon-badge--accent">
           <Target size={18} strokeWidth={1.75} />
         </span>
-        <p className="savings-percent">{percent}%</p>
+        <p className="goal-percent">{percent}%</p>
       </div>
       <p className="card-name">{goal.title}</p>
       <p className="card-meta">
@@ -27,8 +27,8 @@ export default function GoalCard({ goal }) {
           target: formatMoney(goal.target),
         })}
       </p>
-      <ProgressBar value={goal.current} max={goal.target} tone="success" />
-      <p className="card-remaining is-success">
+      <ProgressBar value={goal.current} max={goal.target} tone="secondary" />
+      <p className="card-remaining is-secondary">
         {t('goals.remaining', { amount: formatMoney(remaining) })}
       </p>
     </article>
