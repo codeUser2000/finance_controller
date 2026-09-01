@@ -15,6 +15,17 @@ function mapAccount(account) {
   };
 }
 
+function mapGoal(goal) {
+  return {
+    id: goal.id,
+    title: goal.title,
+    current: Number(goal.current_amount),
+    target: Number(goal.target_amount),
+    accountId: goal.account_id ?? null,
+    accountName: goal.Account?.name ?? null,
+  };
+}
+
 function mapTransaction(transaction) {
   return {
     id: transaction.id,
@@ -71,6 +82,7 @@ export function FinanceProvider({ children }) {
   const [apiCategories, setApiCategories] = useState([]);
   const [budgetItems, setBudgetItems] = useState([]);
   const [accounts, setAccounts] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -78,15 +90,18 @@ export function FinanceProvider({ children }) {
 
   const reload = useCallback(async () => {
     const { month, year } = getBudgetPeriod();
-    const [nextCategories, nextAccounts, nextBudgets, nextTransactions] = await Promise.all([
+    const [nextCategories, nextAccounts, nextBudgets, nextGoals, nextTransactions] =
+      await Promise.all([
       api.get('/categories'),
       api.get('/accounts'),
       api.get(`/budgets?month=${month}&year=${year}`),
+      api.get('/goals'),
       api.get('/transactions'),
     ]);
     setApiCategories(nextCategories);
     setAccounts(nextAccounts.map(mapAccount));
     setBudgetItems(nextBudgets);
+    setGoals(nextGoals.map(mapGoal));
     setTransactions(nextTransactions.map(mapTransaction));
   }, []);
 
@@ -129,6 +144,7 @@ export function FinanceProvider({ children }) {
     spendingBudget,
     spent,
     savingsAccounts,
+    goals,
     categories,
     accounts,
     transactions,
@@ -346,6 +362,80 @@ export function FinanceProvider({ children }) {
     }
   }
 
+  async function addGoal({ title, current, target, accountId }) {
+    const trimmed = title.trim();
+    if (!trimmed) return t('errors.enterGoalTitle');
+
+    const targetAmount = Number(target);
+    if (Number.isNaN(targetAmount) || targetAmount <= 0) {
+      return t('errors.enterGoalTarget');
+    }
+
+    const payload = {
+      title: trimmed,
+      target_amount: targetAmount,
+      account_id: accountId || null,
+    };
+
+    if (!accountId) {
+      const currentAmount = current === '' || current === undefined ? 0 : Number(current);
+      if (Number.isNaN(currentAmount) || currentAmount < 0) {
+        return t('errors.enterGoalCurrent');
+      }
+      payload.current_amount = currentAmount;
+    }
+
+    try {
+      await api.post('/goals', payload);
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
+  async function updateGoal(goalId, { title, current, target, accountId }) {
+    const trimmed = title.trim();
+    if (!trimmed) return t('errors.enterGoalTitle');
+
+    const targetAmount = Number(target);
+    if (Number.isNaN(targetAmount) || targetAmount <= 0) {
+      return t('errors.enterGoalTarget');
+    }
+
+    const payload = {
+      title: trimmed,
+      target_amount: targetAmount,
+      account_id: accountId || null,
+    };
+
+    if (!accountId) {
+      const currentAmount = current === '' || current === undefined ? 0 : Number(current);
+      if (Number.isNaN(currentAmount) || currentAmount < 0) {
+        return t('errors.enterGoalCurrent');
+      }
+      payload.current_amount = currentAmount;
+    }
+
+    try {
+      await api.put(`/goals/${goalId}`, payload);
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
+  async function deleteGoal(goalId) {
+    try {
+      await api.delete(`/goals/${goalId}`);
+      await reload();
+      return null;
+    } catch (saveError) {
+      return saveError.message;
+    }
+  }
+
   async function deleteTransaction(transactionId) {
     try {
       await api.delete(`/transactions/${transactionId}`);
@@ -378,6 +468,9 @@ export function FinanceProvider({ children }) {
         addAccount,
         updateAccount,
         deleteAccount,
+        addGoal,
+        updateGoal,
+        deleteGoal,
         getAccountName,
       }}
     >

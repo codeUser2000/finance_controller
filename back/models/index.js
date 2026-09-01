@@ -5,6 +5,7 @@ import defineCategory from './Category.js';
 import defineAccount from './Account.js';
 import defineBudgetItem from './BudgetItem.js';
 import defineTransaction from './Transaction.js';
+import defineGoal from './Goal.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ export const Category = defineCategory(sequelize);
 export const Account = defineAccount(sequelize);
 export const BudgetItem = defineBudgetItem(sequelize);
 export const Transaction = defineTransaction(sequelize);
+export const Goal = defineGoal(sequelize);
 
 User.hasMany(Category, { foreignKey: 'user_id', as: 'categories' });
 Category.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
@@ -34,6 +36,9 @@ Account.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
 
 User.hasMany(Transaction, { foreignKey: 'user_id', as: 'transactions' });
 Transaction.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
+
+User.hasMany(Goal, { foreignKey: 'user_id', as: 'goals' });
+Goal.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
 
 Category.hasMany(BudgetItem, {
   foreignKey: 'category_id',
@@ -64,3 +69,6 @@ Transaction.belongsTo(Account, {
   foreignKey: 'account_id',
   as: 'Account',
 });
+
+Account.hasMany(Goal, { foreignKey: 'account_id', as: 'goals' });
+Goal.belongsTo(Account, { foreignKey: 'account_id', as: 'Account' });

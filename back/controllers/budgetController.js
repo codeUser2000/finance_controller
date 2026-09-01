@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { BudgetItem, Category } from '../models/index.js';
 
 function parsePositiveInt(value) {
@@ -85,23 +86,70 @@ async function findOwnedCategory(req, categoryId) {
   });
 }
 
+async function ensureBudgetsForPeriod(req, month, year) {
+  const existing = await BudgetItem.findAll({
+    where: { month, year },
+    attributes: ['category_id'],
+    include: [categoryInclude(req)],
+  });
+  const covered = new Set(existing.map((item) => item.category_id));
+
+  const categories = await Category.findAll({
+    where: { user_id: req.user.id },
+    attributes: ['id'],
+  });
+
+  for (const category of categories) {
+    if (covered.has(category.id)) continue;
+
+    const previous = await BudgetItem.findOne({
+      where: {
+        category_id: category.id,
+        [Op.or]: [
+          { year: { [Op.lt]: year } },
+          { year, month: { [Op.lt]: month } },
+        ],
+      },
+      include: [categoryInclude(req)],
+      order: [['year', 'DESC'], ['month', 'DESC'], ['id', 'DESC']],
+    });
+
+    if (!previous) continue;
+
+    await BudgetItem.create({
+      category_id: category.id,
+      month,
+      year,
+      amount: previous.amount,
+      is_active: previous.is_active,
+    });
+  }
+}
+
 export async function list(req, res) {
   try {
+    const month =
+      req.query.month !== undefined ? parsePositiveInt(req.query.month) : null;
+    const year =
+      req.query.year !== undefined ? parsePositiveInt(req.query.year) : null;
+
+    if (req.query.month !== undefined && (month === null || month < 1 || month > 12)) {
+      return res.status(400).json({ success: false, message: 'month must be between 1 and 12' });
+    }
+    if (req.query.year !== undefined && year === null) {
+      return res.status(400).json({ success: false, message: 'year must be a valid integer' });
+    }
+    if ((month && !year) || (year && !month)) {
+      return res.status(400).json({ success: false, message: 'month and year are both required' });
+    }
+
+    if (month && year) {
+      await ensureBudgetsForPeriod(req, month, year);
+    }
+
     const where = {};
-    if (req.query.month !== undefined) {
-      const month = parsePositiveInt(req.query.month);
-      if (month === null || month < 1 || month > 12) {
-        return res.status(400).json({ success: false, message: 'month must be between 1 and 12' });
-      }
-      where.month = month;
-    }
-    if (req.query.year !== undefined) {
-      const year = parsePositiveInt(req.query.year);
-      if (year === null) {
-        return res.status(400).json({ success: false, message: 'year must be a valid integer' });
-      }
-      where.year = year;
-    }
+    if (month) where.month = month;
+    if (year) where.year = year;
 
     const budgets = await BudgetItem.findAll({
       where,

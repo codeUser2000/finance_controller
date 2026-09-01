@@ -3,9 +3,9 @@ import { useFinance } from '../context/useFinance.js';
 import { useLanguage } from '../context/useLanguage.js';
 import { useAuth } from '../context/useAuth.js';
 import { getGreetingKey } from '../utils/dates.js';
-import { formatMoney } from '../utils/formatMoney.js';
 import SpendableCard from '../components/dashboard/SpendableCard.jsx';
 import BudgetCard from '../components/dashboard/BudgetCard.jsx';
+import GoalCard from '../components/goals/GoalCard.jsx';
 import RecentTransactions from '../components/dashboard/RecentTransactions.jsx';
 
 export default function Dashboard() {
@@ -48,20 +48,17 @@ export default function Dashboard() {
       <div className="dashboard-lower">
         <section className="section">
           <div className="section-header">
-            <h2 className="section-title">{t('dashboard.savingsAccounts')}</h2>
-            <Link to="/accounts" className="section-link">
-              {t('dashboard.viewAccounts')}
+            <h2 className="section-title">{t('dashboard.goals')}</h2>
+            <Link to="/goals" className="section-link">
+              {t('dashboard.viewGoals')}
             </Link>
           </div>
-          {data.savingsAccounts.length === 0 ? (
-            <p className="empty-copy">{t('dashboard.noSavings')}</p>
+          {data.goals.length === 0 ? (
+            <p className="empty-copy">{t('dashboard.noGoals')}</p>
           ) : (
             <div className="savings-grid">
-              {data.savingsAccounts.map((account) => (
-                <article key={account.id} className="card">
-                  <p className="card-name">{account.name}</p>
-                  <p className="account-balance amount">{formatMoney(account.balance)}</p>
-                </article>
+              {data.goals.slice(0, 2).map((goal) => (
+                <GoalCard key={goal.id} goal={goal} />
               ))}
             </div>
           )}

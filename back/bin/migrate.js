@@ -32,6 +32,15 @@ async function migrate() {
       allowNull: false,
       defaultValue: true,
     });
+    await addColumnIfMissing('goals', 'user_id', userIdColumn);
+    await addColumnIfMissing('goals', 'account_id', {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'accounts',
+        key: 'id',
+      },
+    });
 
     console.log('Database tables created if they did not already exist.');
     process.exit(0);
