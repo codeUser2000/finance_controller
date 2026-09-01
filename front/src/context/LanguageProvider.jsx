@@ -23,7 +23,7 @@ export function LanguageProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.lang = lang;
-    document.title = translations[lang]?.appName || 'Money Manager';
+    document.title = translations[lang]?.appName || 'Budgeting';
     try {
       localStorage.setItem(STORAGE_KEY, lang);
     } catch {

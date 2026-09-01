@@ -1,17 +1,16 @@
 import { Link, Outlet } from 'react-router-dom';
-import { Landmark, LogOut, WalletCards } from 'lucide-react';
+import { Landmark, User } from 'lucide-react';
 import Sidebar from './Sidebar.jsx';
 import MobileNav from './MobileNav.jsx';
 import LanguageToggle from './LanguageToggle.jsx';
+import AppIcon from '../shared/AppIcon.jsx';
 import AddTransactionModal from '../transactions/AddTransactionModal.jsx';
 import { useFinance } from '../../context/useFinance.js';
 import { useLanguage } from '../../context/useLanguage.js';
-import { useAuth } from '../../context/useAuth.js';
 
 export default function AppLayout() {
   const { loading, error } = useFinance();
   const { t } = useLanguage();
-  const { logout } = useAuth();
 
   return (
     <div className="app-shell">
@@ -20,7 +19,7 @@ export default function AppLayout() {
         <header className="mobile-topbar">
           <Link to="/" className="mobile-topbar-brand">
             <span className="brand-mark">
-              <WalletCards size={18} />
+              <AppIcon size={36} />
             </span>
             {t('appName')}
           </Link>
@@ -29,14 +28,20 @@ export default function AppLayout() {
             <Link to="/accounts" className="icon-button" aria-label={t('nav.accounts')}>
               <Landmark size={18} />
             </Link>
-            <button type="button" className="icon-button" onClick={logout} aria-label={t('auth.logout')}>
-              <LogOut size={18} />
-            </button>
+            <Link to="/profile" className="icon-button" aria-label={t('nav.profile')}>
+              <User size={18} />
+            </Link>
           </div>
         </header>
         <main className="app-content">
           {error ? <p className="app-banner">{t('errors.loadFailed')}</p> : null}
-          {loading ? <p className="loading-copy">{t('errors.loading')}</p> : <Outlet />}
+          {loading ? (
+            <p className="loading-copy">{t('errors.loading')}</p>
+          ) : (
+            <div className="page-body">
+              <Outlet />
+            </div>
+          )}
         </main>
       </div>
       <MobileNav />

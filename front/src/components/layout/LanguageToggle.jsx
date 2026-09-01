@@ -5,17 +5,20 @@ export default function LanguageToggle({ compact = false }) {
   const { lang, setLang, t } = useLanguage();
 
   return (
-    <div className={`lang-toggle ${compact ? 'is-compact' : ''}`} role="group" aria-label={t('language')}>
-      {LANGUAGES.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          className={lang === item.id ? 'is-active' : ''}
-          onClick={() => setLang(item.id)}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
+    <label className={`lang-select-wrap ${compact ? 'is-compact' : ''}`}>
+      <span className="sr-only">{t('language')}</span>
+      <select
+        className="lang-select"
+        value={lang}
+        onChange={(event) => setLang(event.target.value)}
+        aria-label={t('language')}
+      >
+        {LANGUAGES.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.label}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }

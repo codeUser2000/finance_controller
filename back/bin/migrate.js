@@ -49,6 +49,15 @@ async function migrate() {
         key: 'id',
       },
     });
+    await addColumnIfMissing('users', 'totp_secret', {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+    });
+    await addColumnIfMissing('users', 'totp_enabled', {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    });
 
     console.log('Database tables created if they did not already exist.');
     process.exit(0);

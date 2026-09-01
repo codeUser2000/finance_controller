@@ -22,6 +22,15 @@ export default function defineUser(sequelize) {
         type: DataTypes.STRING(120),
         allowNull: false,
       },
+      totp_secret: {
+        type: DataTypes.STRING(64),
+        allowNull: true,
+      },
+      totp_enabled: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
     {
       tableName: 'users',

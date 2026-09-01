@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { WalletCards } from 'lucide-react';
 import { useAuth } from '../context/useAuth.js';
 import { useLanguage } from '../context/useLanguage.js';
+import AppIcon from '../components/shared/AppIcon.jsx';
 import LanguageToggle from '../components/layout/LanguageToggle.jsx';
 import { authErrorMessage } from '../utils/authErrors.js';
 
@@ -39,7 +39,7 @@ export default function Register() {
       <div className="auth-card">
         <div className="auth-card-top">
           <span className="brand-mark">
-            <WalletCards size={18} />
+            <AppIcon size={36} />
           </span>
           <div>
             <h1 className="auth-title">{t('appName')}</h1>
