@@ -44,6 +44,7 @@ export default function Transactions() {
         transaction.description,
         transaction.category,
         getAccountName(transaction.accountId),
+        transaction.toAccountName,
       ]
         .join(' ')
         .toLowerCase();

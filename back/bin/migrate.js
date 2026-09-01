@@ -41,6 +41,14 @@ async function migrate() {
         key: 'id',
       },
     });
+    await addColumnIfMissing('transactions', 'to_account_id', {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'accounts',
+        key: 'id',
+      },
+    });
 
     console.log('Database tables created if they did not already exist.');
     process.exit(0);

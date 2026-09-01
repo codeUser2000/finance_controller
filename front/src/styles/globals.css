@@ -472,6 +472,10 @@ textarea:focus-visible {
   color: var(--color-secondary);
 }
 
+.amount-transfer {
+  color: var(--color-primary);
+}
+
 .amount-danger {
   color: var(--color-danger);
 }

@@ -54,6 +54,15 @@ function validateTransaction(body, { partial = false } = {}) {
     return 'category_id is required for expenses';
   }
 
+  if (type === 'transfer' || (!partial && type === 'transfer')) {
+    if (!body.to_account_id) {
+      return 'to_account_id is required for transfers';
+    }
+    if (Number(body.to_account_id) === Number(body.account_id)) {
+      return 'to_account_id must differ from account_id';
+    }
+  }
+
   return null;
 }
 
@@ -65,16 +74,30 @@ function toPayload(body, userId, { partial = false } = {}) {
     payload.category_id = body.category_id || null;
   }
   if (!partial || body.account_id !== undefined) payload.account_id = body.account_id;
+  if (!partial || body.to_account_id !== undefined) {
+    payload.to_account_id = body.to_account_id || null;
+  }
   if (!partial || body.note !== undefined) payload.note = body.note?.trim() || null;
   if (!partial || body.occurred_at !== undefined) payload.occurred_at = body.occurred_at;
   if (!partial) payload.user_id = userId;
   return payload;
 }
 
+function normalizeTransactionFields(transaction) {
+  const next = { ...transaction };
+  if (next.type === 'transfer') {
+    next.category_id = null;
+  } else {
+    next.to_account_id = null;
+  }
+  return next;
+}
+
 function includes() {
   return [
     { model: Category, as: 'Category' },
     { model: Account, as: 'Account' },
+    { model: Account, as: 'ToAccount' },
   ];
 }
 
@@ -98,6 +121,36 @@ async function findOwnedTransaction(req, id) {
   return Transaction.findOne({
     where: { id, user_id: req.user.id },
     include: includes(),
+  });
+}
+
+async function applyBalances(req, transaction, dbTransaction, multiplier = 1) {
+  const amount = Number(transaction.amount);
+
+  if (transaction.type === 'transfer') {
+    const fromAccount = await assertAccount(req, transaction.account_id, dbTransaction);
+    const toAccount = await assertAccount(req, transaction.to_account_id, dbTransaction);
+
+    if (!fromAccount) {
+      throw Object.assign(new Error('account_id must belong to an active account'), { status: 400 });
+    }
+    if (!toAccount) {
+      throw Object.assign(new Error('to_account_id must belong to an active account'), { status: 400 });
+    }
+
+    await fromAccount.increment('balance', { by: -amount * multiplier, transaction: dbTransaction });
+    await toAccount.increment('balance', { by: amount * multiplier, transaction: dbTransaction });
+    return;
+  }
+
+  const account = await assertAccount(req, transaction.account_id, dbTransaction);
+  if (!account) {
+    throw Object.assign(new Error('account_id must belong to an active account'), { status: 400 });
+  }
+
+  await account.increment('balance', {
+    by: balanceDelta(transaction.type, amount) * multiplier,
+    transaction: dbTransaction,
   });
 }
 
@@ -161,17 +214,11 @@ export async function create(req, res) {
       return res.status(400).json({ success: false, message: 'category_id must belong to an active category' });
     }
 
-    const created = await sequelize.transaction(async (t) => {
-      const account = await assertAccount(req, req.body.account_id, t);
-      if (!account) {
-        throw Object.assign(new Error('account_id must belong to an active account'), { status: 400 });
-      }
+    const payload = normalizeTransactionFields(toPayload(req.body, req.user.id));
 
-      const transaction = await Transaction.create(toPayload(req.body, req.user.id), { transaction: t });
-      await account.increment('balance', {
-        by: balanceDelta(req.body.type, req.body.amount),
-        transaction: t,
-      });
+    const created = await sequelize.transaction(async (t) => {
+      const transaction = await Transaction.create(payload, { transaction: t });
+      await applyBalances(req, transaction.toJSON(), t, 1);
       return transaction;
     });
 
@@ -191,12 +238,16 @@ export async function update(req, res) {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
 
-    const error = validateTransaction({ ...existing.toJSON(), ...req.body }, { partial: true });
+    const next = normalizeTransactionFields({
+      ...existing.toJSON(),
+      ...toPayload(req.body, req.user.id, { partial: true }),
+    });
+
+    const error = validateTransaction(next, { partial: true });
     if (error) {
       return res.status(400).json({ success: false, message: error });
     }
 
-    const next = { ...existing.toJSON(), ...toPayload(req.body, req.user.id, { partial: true }) };
     if (next.type === 'expense' && !next.category_id) {
       return res.status(400).json({ success: false, message: 'category_id is required for expenses' });
     }
@@ -205,28 +256,9 @@ export async function update(req, res) {
     }
 
     await sequelize.transaction(async (t) => {
-      const oldAccount = await Account.findOne({
-        where: { id: existing.account_id, user_id: req.user.id },
-        transaction: t,
-        lock: t.LOCK.UPDATE,
-      });
-      if (oldAccount) {
-        await oldAccount.increment('balance', {
-          by: -balanceDelta(existing.type, existing.amount),
-          transaction: t,
-        });
-      }
-
-      const nextAccount = await assertAccount(req, next.account_id, t);
-      if (!nextAccount) {
-        throw Object.assign(new Error('account_id must belong to an active account'), { status: 400 });
-      }
-
-      await existing.update(toPayload(req.body, req.user.id, { partial: true }), { transaction: t });
-      await nextAccount.increment('balance', {
-        by: balanceDelta(next.type, next.amount),
-        transaction: t,
-      });
+      await applyBalances(req, existing.toJSON(), t, -1);
+      await existing.update(toPayload(next, req.user.id, { partial: true }), { transaction: t });
+      await applyBalances(req, next, t, 1);
     });
 
     await existing.reload({ include: includes() });
@@ -246,17 +278,7 @@ export async function remove(req, res) {
     }
 
     await sequelize.transaction(async (t) => {
-      const account = await Account.findOne({
-        where: { id: existing.account_id, user_id: req.user.id },
-        transaction: t,
-        lock: t.LOCK.UPDATE,
-      });
-      if (account) {
-        await account.increment('balance', {
-          by: -balanceDelta(existing.type, existing.amount),
-          transaction: t,
-        });
-      }
+      await applyBalances(req, existing.toJSON(), t, -1);
       await existing.destroy({ transaction: t });
     });
 

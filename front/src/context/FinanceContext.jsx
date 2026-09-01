@@ -34,6 +34,9 @@ function mapTransaction(transaction) {
     categoryId: transaction.category_id,
     category: transaction.Category?.name || '',
     accountId: transaction.account_id,
+    accountName: transaction.Account?.name || '',
+    toAccountId: transaction.to_account_id,
+    toAccountName: transaction.ToAccount?.name || '',
     description: transaction.note || transaction.Category?.name || '',
     occurredAt: transaction.occurred_at,
   };
@@ -164,11 +167,16 @@ export function FinanceProvider({ children }) {
     return accounts.find((account) => String(account.id) === String(accountId))?.name || '';
   }
 
-  async function addTransaction({ type, amount, categoryId, accountId, note, date }) {
+  async function addTransaction({ type, amount, categoryId, accountId, toAccountId, note, date }) {
     const numericAmount = Number(amount);
     if (!numericAmount || numericAmount <= 0) return t('errors.enterAmount');
     if (!accountId) return t('errors.chooseAccount');
     if (type === 'expense' && !categoryId) return t('errors.chooseCategory');
+    if (type === 'transfer') {
+      if (accounts.length < 2) return t('errors.needTwoAccounts');
+      if (!toAccountId) return t('errors.chooseToAccount');
+      if (String(accountId) === String(toAccountId)) return t('errors.sameAccount');
+    }
 
     try {
       await api.post('/transactions', {
@@ -176,6 +184,7 @@ export function FinanceProvider({ children }) {
         amount: numericAmount,
         category_id: categoryId || null,
         account_id: accountId,
+        to_account_id: type === 'transfer' ? toAccountId : null,
         note: note?.trim() || null,
         occurred_at: date,
       });

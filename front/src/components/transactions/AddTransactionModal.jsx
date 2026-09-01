@@ -24,6 +24,10 @@ function categoriesForType(type, categories) {
   return active.filter((category) => category.type === 'expense');
 }
 
+function defaultToAccountId(accounts, fromAccountId) {
+  return accounts.find((account) => String(account.id) !== String(fromAccountId))?.id || '';
+}
+
 function AddTransactionForm() {
   const { data, addTransaction } = useFinance();
   const { t } = useLanguage();
@@ -34,6 +38,7 @@ function AddTransactionForm() {
       data.categories.find((category) => category.type === 'expense' && category.isActive)?.id ||
       '',
     accountId: data.accounts[0]?.id || '',
+    toAccountId: defaultToAccountId(data.accounts, data.accounts[0]?.id),
     note: '',
     date: toInputDate(),
   });
@@ -42,6 +47,7 @@ function AddTransactionForm() {
 
   const categories = categoriesForType(form.type, data.categories);
   const needsCategory = form.type === 'expense';
+  const isTransfer = form.type === 'transfer';
   const saveLabel =
     form.type === 'income'
       ? t('modal.saveIncome')
@@ -50,7 +56,13 @@ function AddTransactionForm() {
         : t('modal.saveExpense');
 
   function updateField(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === 'accountId' && String(value) === String(prev.toAccountId)) {
+        next.toAccountId = defaultToAccountId(data.accounts, value);
+      }
+      return next;
+    });
   }
 
   function handleTypeChange(type) {
@@ -59,6 +71,10 @@ function AddTransactionForm() {
       ...prev,
       type,
       categoryId: nextCategories[0]?.id || '',
+      toAccountId:
+        type === 'transfer'
+          ? defaultToAccountId(data.accounts, prev.accountId)
+          : prev.toAccountId,
     }));
   }
 
@@ -71,6 +87,8 @@ function AddTransactionForm() {
       setError(result);
     }
   }
+
+  const transferBlocked = isTransfer && data.accounts.length < 2;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -111,7 +129,7 @@ function AddTransactionForm() {
         </div>
       </label>
 
-      {form.type !== 'transfer' ? (
+      {!isTransfer ? (
         <label className="form-field">
           <span className="form-label">{t('modal.category')}</span>
           <select
@@ -133,25 +151,70 @@ function AddTransactionForm() {
         </label>
       ) : null}
 
-      <label className="form-field">
-        <span className="form-label">{t('modal.account')}</span>
-        <select
-          value={form.accountId}
-          onChange={(event) => updateField('accountId', event.target.value)}
-          required
-          disabled={data.accounts.length === 0}
-        >
-          {data.accounts.length === 0 ? (
-            <option value="">{t('modal.addAccountFirst')}</option>
-          ) : (
-            data.accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))
-          )}
-        </select>
-      </label>
+      {isTransfer ? (
+        <>
+          <label className="form-field">
+            <span className="form-label">{t('modal.fromAccount')}</span>
+            <select
+              value={form.accountId}
+              onChange={(event) => updateField('accountId', event.target.value)}
+              required
+              disabled={data.accounts.length === 0}
+            >
+              {data.accounts.length === 0 ? (
+                <option value="">{t('modal.addAccountFirst')}</option>
+              ) : (
+                data.accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </label>
+          <label className="form-field">
+            <span className="form-label">{t('modal.toAccount')}</span>
+            <select
+              value={form.toAccountId}
+              onChange={(event) => updateField('toAccountId', event.target.value)}
+              required
+              disabled={transferBlocked}
+            >
+              {transferBlocked ? (
+                <option value="">{t('modal.needTwoAccounts')}</option>
+              ) : (
+                data.accounts
+                  .filter((account) => String(account.id) !== String(form.accountId))
+                  .map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.name}
+                    </option>
+                  ))
+              )}
+            </select>
+          </label>
+        </>
+      ) : (
+        <label className="form-field">
+          <span className="form-label">{t('modal.account')}</span>
+          <select
+            value={form.accountId}
+            onChange={(event) => updateField('accountId', event.target.value)}
+            required
+            disabled={data.accounts.length === 0}
+          >
+            {data.accounts.length === 0 ? (
+              <option value="">{t('modal.addAccountFirst')}</option>
+            ) : (
+              data.accounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))
+            )}
+          </select>
+        </label>
+      )}
 
       <label className="form-field">
         <span className="form-label">{t('modal.note')}</span>
@@ -180,6 +243,7 @@ function AddTransactionForm() {
         disabled={
           saving ||
           data.accounts.length === 0 ||
+          transferBlocked ||
           (needsCategory && categories.length === 0)
         }
       >

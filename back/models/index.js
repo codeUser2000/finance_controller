@@ -70,5 +70,15 @@ Transaction.belongsTo(Account, {
   as: 'Account',
 });
 
+Account.hasMany(Transaction, {
+  foreignKey: 'to_account_id',
+  as: 'incomingTransfers',
+});
+
+Transaction.belongsTo(Account, {
+  foreignKey: 'to_account_id',
+  as: 'ToAccount',
+});
+
 Account.hasMany(Goal, { foreignKey: 'account_id', as: 'goals' });
 Goal.belongsTo(Account, { foreignKey: 'account_id', as: 'Account' });

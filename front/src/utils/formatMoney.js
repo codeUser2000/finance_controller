@@ -6,7 +6,7 @@ export function formatMoney(amount) {
 export function formatSignedMoney(amount, type) {
   const formatted = formatMoney(amount);
   if (type === 'income') return `+${formatted}`;
-  if (type === 'expense' || type === 'transfer') return `−${formatted}`;
+  if (type === 'expense') return `−${formatted}`;
   return formatted;
 }
 

@@ -37,6 +37,14 @@ export default function defineTransaction(sequelize) {
           key: 'id',
         },
       },
+      to_account_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'accounts',
+          key: 'id',
+        },
+      },
       note: {
         type: DataTypes.STRING(255),
         allowNull: true,
