@@ -12,7 +12,7 @@ export default function ThemeToggle() {
   ];
 
   return (
-    <div className="segmented segmented-3" role="group" aria-label={t('profile.appearance')}>
+    <div className="segmented segmented-3 is-compact" role="group" aria-label={t('profile.appearance')}>
       {options.map((option) => (
         <button
           key={option.id}

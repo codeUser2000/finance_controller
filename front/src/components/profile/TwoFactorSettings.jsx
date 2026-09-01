@@ -64,8 +64,8 @@ export default function TwoFactorSettings() {
   }
 
   return (
-    <div className="profile-section">
-      <h2 className="profile-section-title">{t('profile.twoFactor')}</h2>
+    <div className="profile-subsection">
+      <h3 className="profile-subsection-title">{t('profile.twoFactor')}</h3>
       <p className="form-hint">{t('profile.twoFactorHint')}</p>
 
       {user?.totpEnabled ? (
@@ -102,9 +102,11 @@ export default function TwoFactorSettings() {
               }}
             />
           </label>
-          <button type="submit" className="btn btn-ghost btn-block" disabled={loading}>
-            {loading ? t('modal.saving') : t('profile.disableTwoFactor')}
-          </button>
+          <div className="profile-actions">
+            <button type="submit" className="btn btn-ghost btn-small" disabled={loading}>
+              {loading ? t('modal.saving') : t('profile.disableTwoFactor')}
+            </button>
+          </div>
         </form>
       ) : setup ? (
         <form className="profile-inline-form" onSubmit={handleEnable}>
@@ -131,32 +133,36 @@ export default function TwoFactorSettings() {
               }}
             />
           </label>
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? t('modal.saving') : t('profile.confirmTwoFactor')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost btn-block"
-            onClick={() => {
-              setSetup(null);
-              setEnableCode('');
-              setError('');
-            }}
-          >
-            {t('profile.cancelSetup')}
-          </button>
+          <div className="profile-actions">
+            <button type="submit" className="btn btn-primary btn-small" disabled={loading}>
+              {loading ? t('modal.saving') : t('profile.confirmTwoFactor')}
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={() => {
+                setSetup(null);
+                setEnableCode('');
+                setError('');
+              }}
+            >
+              {t('profile.cancelSetup')}
+            </button>
+          </div>
         </form>
       ) : (
         <>
           <p className="profile-status">{t('profile.twoFactorOff')}</p>
-          <button
-            type="button"
-            className="btn btn-secondary btn-block"
-            onClick={handleStartSetup}
-            disabled={loading}
-          >
-            {loading ? t('modal.saving') : t('profile.enableTwoFactor')}
-          </button>
+          <div className="profile-actions">
+            <button
+              type="button"
+              className="btn btn-secondary btn-small"
+              onClick={handleStartSetup}
+              disabled={loading}
+            >
+              {loading ? t('modal.saving') : t('profile.enableTwoFactor')}
+            </button>
+          </div>
         </>
       )}
 

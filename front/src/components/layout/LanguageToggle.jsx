@@ -1,11 +1,19 @@
 import { useLanguage } from '../../context/useLanguage.js';
 import { LANGUAGES } from '../../i18n/translations.js';
 
-export default function LanguageToggle({ compact = false }) {
+export default function LanguageToggle({ compact = false, small = false }) {
   const { lang, setLang, t } = useLanguage();
 
+  const wrapClass = [
+    'lang-select-wrap',
+    compact ? 'is-compact' : '',
+    small ? 'is-small' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <label className={`lang-select-wrap ${compact ? 'is-compact' : ''}`}>
+    <label className={wrapClass}>
       <span className="sr-only">{t('language')}</span>
       <select
         className="lang-select"

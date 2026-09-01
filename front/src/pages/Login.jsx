@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth.js';
 import { useLanguage } from '../context/useLanguage.js';
-import AppIcon from '../components/shared/AppIcon.jsx';
-import LanguageToggle from '../components/layout/LanguageToggle.jsx';
+import AuthShell from '../components/auth/AuthShell.jsx';
 import { authErrorMessage } from '../utils/authErrors.js';
 
 export default function Login() {
@@ -56,87 +55,80 @@ export default function Login() {
     }
   }
 
+  const subtitle =
+    step === '2fa' ? t('profile.twoFactorLogin') : t('auth.loginSubtitle');
+
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-card-top">
-          <span className="brand-mark">
-            <AppIcon size={36} />
-          </span>
-          <div>
-            <h1 className="auth-title">{t('appName')}</h1>
-            <p className="auth-subtitle">
-              {step === '2fa' ? t('profile.twoFactorLogin') : t('auth.loginSubtitle')}
-            </p>
-          </div>
-        </div>
-        <LanguageToggle />
-        {step === 'credentials' ? (
-          <form onSubmit={handleCredentialsSubmit}>
-            <label className="form-field">
-              <span className="form-label">{t('auth.email')}</span>
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </label>
-            <label className="form-field">
-              <span className="form-label">{t('auth.password')}</span>
-              <input
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </label>
-            {error ? <p className="form-error">{error}</p> : null}
-            <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
-              {saving ? t('auth.pleaseWait') : t('auth.login')}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handle2faSubmit}>
-            <label className="form-field">
-              <span className="form-label">{t('profile.verificationCode')}</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                required
-                autoFocus
-                value={code}
-                onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-              />
-            </label>
-            {error ? <p className="form-error">{error}</p> : null}
-            <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
-              {saving ? t('auth.pleaseWait') : t('profile.verifyAndLogin')}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost btn-block"
-              onClick={() => {
-                setStep('credentials');
-                setTempToken('');
-                setCode('');
-                setError('');
-              }}
-            >
-              {t('profile.backToLogin')}
-            </button>
-          </form>
-        )}
+    <AuthShell
+      subtitle={subtitle}
+      footer={
         <p className="auth-switch">
           {t('auth.noAccount')}{' '}
           <Link to="/register">{t('auth.register')}</Link>
         </p>
-      </div>
-    </div>
+      }
+    >
+      {step === 'credentials' ? (
+        <form onSubmit={handleCredentialsSubmit}>
+          <label className="form-field">
+            <span className="form-label">{t('auth.email')}</span>
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </label>
+          <label className="form-field">
+            <span className="form-label">{t('auth.password')}</span>
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          {error ? <p className="form-error">{error}</p> : null}
+          <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
+            {saving ? t('auth.pleaseWait') : t('auth.login')}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handle2faSubmit}>
+          <label className="form-field">
+            <span className="form-label">{t('profile.verificationCode')}</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              required
+              autoFocus
+              value={code}
+              onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+            />
+          </label>
+          {error ? <p className="form-error">{error}</p> : null}
+          <button type="submit" className="btn btn-primary btn-block" disabled={saving}>
+            {saving ? t('auth.pleaseWait') : t('profile.verifyAndLogin')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-block"
+            onClick={() => {
+              setStep('credentials');
+              setTempToken('');
+              setCode('');
+              setError('');
+            }}
+          >
+            {t('profile.backToLogin')}
+          </button>
+        </form>
+      )}
+    </AuthShell>
   );
 }

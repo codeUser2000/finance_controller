@@ -1,8 +1,9 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   ArrowLeftRight,
   Home,
   Landmark,
+  LogOut,
   Plus,
   Target,
   User,
@@ -17,7 +18,13 @@ import AppIcon from '../shared/AppIcon.jsx';
 export default function Sidebar() {
   const { openAdd } = useFinance();
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate('/login', { replace: true });
+  }
 
   const links = [
     { to: '/', label: t('nav.home'), icon: Home, end: true },
@@ -56,11 +63,21 @@ export default function Sidebar() {
       </nav>
       <div className="sidebar-footer">
         {user ? (
-          <NavLink to="/profile" className="sidebar-user-link">
-            {user.name}
-          </NavLink>
+          <div className="sidebar-user-row">
+            <NavLink to="/profile" className="sidebar-user-link">
+              {user.name}
+            </NavLink>
+            <LanguageToggle compact />
+            <button
+              type="button"
+              className="icon-button is-danger"
+              onClick={handleLogout}
+              aria-label={t('auth.logout')}
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
         ) : null}
-        <LanguageToggle />
         <button type="button" className="btn btn-primary btn-block sidebar-add" onClick={openAdd}>
           <Plus size={18} />
           {t('nav.addTransaction')}
