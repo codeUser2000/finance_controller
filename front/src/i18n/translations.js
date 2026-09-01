@@ -14,9 +14,9 @@ export const translations = {
   hy: {
     appName: 'Budgeting',
     brand: {
-      plan: 'ՊԼԱՆ',
-      save: 'Խնայել',
-      achieve: 'Հասնել',
+      plan: 'ՊԼԱՆԱՎՈՐԻՐ',
+      save: 'ԽՆԱՅԻՐ',
+      achieve: 'ՀԱՍԻՐ',
     },
     nav: {
       home: 'Գլխավոր',
@@ -294,9 +294,9 @@ export const translations = {
   ru: {
     appName: 'Budgeting',
     brand: {
-      plan: 'ПЛАН',
-      save: 'КОПИТЬ',
-      achieve: 'ДОСТИЧЬ',
+      plan: 'ПЛАНИРУЙ',
+      save: 'КОПИ',
+      achieve: 'ДОСТИГАЙ',
     },
     nav: {
       home: 'Главная',

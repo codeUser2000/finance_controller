@@ -1,7 +1,7 @@
 import AppIcon from '../shared/AppIcon.jsx';
 import { useLanguage } from '../../context/useLanguage.js';
 
-export default function AuthBrand({ subtitle }) {
+export default function AuthBrand() {
   const { t } = useLanguage();
 
   return (
@@ -23,7 +23,6 @@ export default function AuthBrand({ subtitle }) {
           </span>
           <span className="auth-tagline-achieve">{t('brand.achieve')}</span>
         </p>
-        {subtitle ? <p className="auth-subtitle">{subtitle}</p> : null}
       </div>
     </div>
   );

@@ -5,8 +5,11 @@ export default function AuthShell({ subtitle, children, footer }) {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <AuthBrand subtitle={subtitle} />
-        <LanguageToggle compact />
+        <AuthBrand />
+        <div className="auth-lang">
+          <LanguageToggle variant="pills" compact />
+        </div>
+        {subtitle ? <p className="auth-subtitle">{subtitle}</p> : null}
         {children}
         {footer}
       </div>

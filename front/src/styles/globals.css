@@ -219,6 +219,54 @@ textarea {
   background-size: 14px;
 }
 
+.lang-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--color-surface-muted);
+}
+
+.lang-toggle button {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary);
+}
+
+.lang-toggle button.is-active {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-subtle);
+}
+
+.lang-toggle.is-compact button {
+  min-height: 28px;
+  min-width: 36px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+.auth-card .lang-toggle {
+  width: 100%;
+  padding: 2px;
+  gap: 2px;
+}
+
+.auth-card .lang-toggle button {
+  flex: 1;
+  min-width: 0;
+  min-height: 28px;
+  padding: 0 10px;
+}
+
 .icon-button {
   width: 36px;
   height: 36px;
@@ -1580,37 +1628,32 @@ textarea:focus-visible {
 .auth-card {
   width: 100%;
   max-width: 420px;
-  padding: 0;
+  padding: 0 20px 20px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   background: var(--color-surface);
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   text-align: left;
   overflow: hidden;
 }
 
-.auth-card > :not(.auth-brand) {
-  margin-left: 24px;
-  margin-right: 24px;
+.auth-card > .auth-brand {
+  margin: 0 -20px;
 }
 
-.auth-card > :last-child {
-  margin-bottom: 24px;
-}
-
-.auth-card > .auth-brand + * {
-  margin-top: 0;
+.auth-card > .auth-lang {
+  width: 100%;
 }
 
 .auth-brand {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 20px 24px;
+  gap: 10px;
+  padding: 18px 20px 16px;
   text-align: center;
   background: var(--color-auth-brand-bg, transparent);
 }
@@ -1680,10 +1723,11 @@ textarea:focus-visible {
 }
 
 .auth-subtitle {
-  margin: 10px 0 0;
-  color: var(--color-auth-subtitle, var(--color-text-secondary));
-  font-size: 14px;
-  line-height: 1.4;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: center;
 }
 
 .auth-card form {
@@ -1708,7 +1752,7 @@ textarea:focus-visible {
     flex-direction: row;
     align-items: center;
     gap: 16px;
-    padding: 24px;
+    padding: 24px 24px 5px;
     text-align: left;
   }
 
