@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useFinance } from '../context/useFinance.js';
 import { useLanguage } from '../context/useLanguage.js';
+import { useToast } from '../context/ToastProvider.jsx';
 import GoalCard from '../components/goals/GoalCard.jsx';
 import GoalModal from '../components/goals/GoalModal.jsx';
 
 export default function Goals() {
   const { data, deleteGoal } = useFinance();
   const { t } = useLanguage();
+  const toast = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
 
@@ -19,7 +21,12 @@ export default function Goals() {
   async function handleDelete(goal) {
     const confirmed = window.confirm(t('goals.deleteConfirm', { name: goal.title }));
     if (!confirmed) return;
-    await deleteGoal(goal.id);
+    const result = await deleteGoal(goal.id);
+    if (result) {
+      toast.error(result || t('toast.actionFailed'));
+      return;
+    }
+    toast.success(t('toast.goalDeleted'));
   }
 
   return (

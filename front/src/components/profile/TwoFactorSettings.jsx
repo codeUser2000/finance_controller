@@ -1,29 +1,31 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/useAuth.js';
 import { useLanguage } from '../../context/useLanguage.js';
+import { useToast } from '../../context/ToastProvider.jsx';
 import { authErrorMessage } from '../../utils/authErrors.js';
 
 export default function TwoFactorSettings() {
   const { user, setup2fa, enable2fa, disable2fa } = useAuth();
   const { t } = useLanguage();
+  const toast = useToast();
   const [setup, setSetup] = useState(null);
   const [enableCode, setEnableCode] = useState('');
   const [disableCode, setDisableCode] = useState('');
   const [disablePassword, setDisablePassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleStartSetup() {
     setLoading(true);
     setError('');
-    setSuccess('');
     try {
       const data = await setup2fa();
       setSetup(data);
       setEnableCode('');
     } catch (setupError) {
-      setError(authErrorMessage(setupError.message, t, 'profile.twoFactorSetupFailed'));
+      const message = authErrorMessage(setupError.message, t, 'profile.twoFactorSetupFailed');
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -33,14 +35,15 @@ export default function TwoFactorSettings() {
     event.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess('');
     try {
       await enable2fa(enableCode);
       setSetup(null);
       setEnableCode('');
-      setSuccess(t('profile.twoFactorEnabled'));
+      toast.success(t('profile.twoFactorEnabled'));
     } catch (enableError) {
-      setError(authErrorMessage(enableError.message, t, 'profile.twoFactorInvalidCode'));
+      const message = authErrorMessage(enableError.message, t, 'profile.twoFactorInvalidCode');
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -50,14 +53,15 @@ export default function TwoFactorSettings() {
     event.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess('');
     try {
       await disable2fa({ code: disableCode, password: disablePassword });
       setDisableCode('');
       setDisablePassword('');
-      setSuccess(t('profile.twoFactorDisabled'));
+      toast.success(t('profile.twoFactorDisabled'));
     } catch (disableError) {
-      setError(authErrorMessage(disableError.message, t, 'profile.twoFactorDisableFailed'));
+      const message = authErrorMessage(disableError.message, t, 'profile.twoFactorDisableFailed');
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -84,7 +88,6 @@ export default function TwoFactorSettings() {
               onChange={(event) => {
                 setDisableCode(event.target.value.replace(/\D/g, '').slice(0, 6));
                 setError('');
-                setSuccess('');
               }}
             />
           </label>
@@ -98,7 +101,6 @@ export default function TwoFactorSettings() {
               onChange={(event) => {
                 setDisablePassword(event.target.value);
                 setError('');
-                setSuccess('');
               }}
             />
           </label>
@@ -129,7 +131,6 @@ export default function TwoFactorSettings() {
               onChange={(event) => {
                 setEnableCode(event.target.value.replace(/\D/g, '').slice(0, 6));
                 setError('');
-                setSuccess('');
               }}
             />
           </label>
@@ -167,7 +168,6 @@ export default function TwoFactorSettings() {
       )}
 
       {error ? <p className="form-error">{error}</p> : null}
-      {success ? <p className="form-success">{success}</p> : null}
     </div>
   );
 }

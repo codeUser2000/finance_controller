@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
 import { useLanguage } from '../../context/useLanguage.js';
+import { useToast } from '../../context/ToastProvider.jsx';
 
 export default function AddBudgetItemModal({ open, onClose }) {
   const { t } = useLanguage();
@@ -16,6 +17,7 @@ export default function AddBudgetItemModal({ open, onClose }) {
 function AddBudgetItemForm({ onClose }) {
   const { data, addBudgetItem } = useFinance();
   const { t } = useLanguage();
+  const toast = useToast();
   const activeCategories = data.categories.filter((category) => category.isActive);
   const hasCategories = activeCategories.length > 0;
   const [mode, setMode] = useState(hasCategories ? 'existing' : 'new');
@@ -38,6 +40,7 @@ function AddBudgetItemForm({ onClose }) {
       setError(result);
       return;
     }
+    toast.success(t('toast.budgetCreated'));
     onClose();
   }
 

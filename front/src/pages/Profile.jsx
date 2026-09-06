@@ -5,6 +5,7 @@ import ThemeToggle from '../components/layout/ThemeToggle.jsx';
 import TwoFactorSettings from '../components/profile/TwoFactorSettings.jsx';
 import { useAuth } from '../context/useAuth.js';
 import { useLanguage } from '../context/useLanguage.js';
+import { useToast } from '../context/ToastProvider.jsx';
 import { authErrorMessage } from '../utils/authErrors.js';
 
 function getInitials(name) {
@@ -23,6 +24,7 @@ function getInitials(name) {
 export default function Profile() {
   const { user, updateProfile, logout } = useAuth();
   const { t } = useLanguage();
+  const toast = useToast();
   const navigate = useNavigate();
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -30,9 +32,7 @@ export default function Profile() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [accountError, setAccountError] = useState('');
-  const [accountSuccess, setAccountSuccess] = useState('');
   const [securityError, setSecurityError] = useState('');
-  const [securitySuccess, setSecuritySuccess] = useState('');
   const [savingAccount, setSavingAccount] = useState(false);
   const [savingSecurity, setSavingSecurity] = useState(false);
 
@@ -44,14 +44,15 @@ export default function Profile() {
   async function handleAccountSave(event) {
     event.preventDefault();
     setAccountError('');
-    setAccountSuccess('');
     setSavingAccount(true);
 
     try {
       await updateProfile({ name, email, currentPassword: '', newPassword: '' });
-      setAccountSuccess(t('profile.accountSaved'));
+      toast.success(t('profile.accountSaved'));
     } catch (saveError) {
-      setAccountError(authErrorMessage(saveError.message, t, 'profile.saveFailed'));
+      const message = authErrorMessage(saveError.message, t, 'profile.saveFailed');
+      setAccountError(message);
+      toast.error(message);
     } finally {
       setSavingAccount(false);
     }
@@ -60,7 +61,6 @@ export default function Profile() {
   async function handleSecuritySave(event) {
     event.preventDefault();
     setSecurityError('');
-    setSecuritySuccess('');
 
     if (!newPassword) {
       setSecurityError(t('profile.enterNewPassword'));
@@ -83,9 +83,11 @@ export default function Profile() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setSecuritySuccess(t('profile.passwordSaved'));
+      toast.success(t('profile.passwordSaved'));
     } catch (saveError) {
-      setSecurityError(authErrorMessage(saveError.message, t, 'profile.saveFailed'));
+      const message = authErrorMessage(saveError.message, t, 'profile.saveFailed');
+      setSecurityError(message);
+      toast.error(message);
     } finally {
       setSavingSecurity(false);
     }
@@ -132,7 +134,6 @@ export default function Profile() {
               onChange={(event) => {
                 setName(event.target.value);
                 setAccountError('');
-                setAccountSuccess('');
               }}
             />
           </label>
@@ -146,12 +147,10 @@ export default function Profile() {
               onChange={(event) => {
                 setEmail(event.target.value);
                 setAccountError('');
-                setAccountSuccess('');
               }}
             />
           </label>
           {accountError ? <p className="form-error">{accountError}</p> : null}
-          {accountSuccess ? <p className="form-success">{accountSuccess}</p> : null}
           <div className="profile-actions">
             <button type="submit" className="btn btn-primary btn-small" disabled={savingAccount}>
               {savingAccount ? t('modal.saving') : t('profile.save')}
@@ -175,7 +174,6 @@ export default function Profile() {
               onChange={(event) => {
                 setCurrentPassword(event.target.value);
                 setSecurityError('');
-                setSecuritySuccess('');
               }}
             />
           </label>
@@ -188,7 +186,6 @@ export default function Profile() {
               onChange={(event) => {
                 setNewPassword(event.target.value);
                 setSecurityError('');
-                setSecuritySuccess('');
               }}
             />
           </label>
@@ -201,12 +198,10 @@ export default function Profile() {
               onChange={(event) => {
                 setConfirmPassword(event.target.value);
                 setSecurityError('');
-                setSecuritySuccess('');
               }}
             />
           </label>
           {securityError ? <p className="form-error">{securityError}</p> : null}
-          {securitySuccess ? <p className="form-success">{securitySuccess}</p> : null}
           <div className="profile-actions">
             <button type="submit" className="btn btn-primary btn-small" disabled={savingSecurity}>
               {savingSecurity ? t('modal.saving') : t('profile.updatePassword')}

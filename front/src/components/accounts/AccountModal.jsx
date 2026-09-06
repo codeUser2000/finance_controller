@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
 import { useLanguage } from '../../context/useLanguage.js';
+import { useToast } from '../../context/ToastProvider.jsx';
 import { formatMoney } from '../../utils/formatMoney.js';
 
 export default function AccountModal({ open, account, onClose }) {
@@ -21,6 +22,7 @@ export default function AccountModal({ open, account, onClose }) {
 function AccountForm({ account, onClose }) {
   const { addAccount, updateAccount } = useFinance();
   const { t } = useLanguage();
+  const toast = useToast();
   const [name, setName] = useState(account?.name || '');
   const [type, setType] = useState(account?.type || 'card');
   const [balance, setBalance] = useState(account ? String(account.balance) : '0');
@@ -46,6 +48,7 @@ function AccountForm({ account, onClose }) {
       setError(result);
       return;
     }
+    toast.success(t(isEdit ? 'toast.accountUpdated' : 'toast.accountCreated'));
     onClose();
   }
 

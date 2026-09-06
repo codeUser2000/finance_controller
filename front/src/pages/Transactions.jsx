@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useFinance } from '../context/useFinance.js';
 import { useLanguage } from '../context/useLanguage.js';
+import { useToast } from '../context/ToastProvider.jsx';
 import { formatMoney } from '../utils/formatMoney.js';
 import {
   groupTransactions,
@@ -13,6 +14,7 @@ import TransactionRow from '../components/shared/TransactionRow.jsx';
 export default function Transactions() {
   const { data, getAccountName, openAdd, deleteTransaction } = useFinance();
   const { t, locale } = useLanguage();
+  const toast = useToast();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const monthOptions = listMonthOptions(
@@ -58,7 +60,12 @@ export default function Transactions() {
   async function handleDelete(transaction) {
     const confirmed = window.confirm(t('transactions.deleteConfirm'));
     if (!confirmed) return;
-    await deleteTransaction(transaction.id);
+    const result = await deleteTransaction(transaction.id);
+    if (result) {
+      toast.error(result || t('toast.actionFailed'));
+      return;
+    }
+    toast.success(t('toast.transactionDeleted'));
   }
 
   const monthSpent = monthlyTransactions

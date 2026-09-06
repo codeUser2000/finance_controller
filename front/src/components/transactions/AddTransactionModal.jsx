@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
 import { useLanguage } from '../../context/useLanguage.js';
+import { useToast } from '../../context/ToastProvider.jsx';
 import { toInputDate } from '../../utils/dates.js';
 
 export default function AddTransactionModal() {
@@ -31,6 +32,7 @@ function defaultToAccountId(accounts, fromAccountId) {
 function AddTransactionForm() {
   const { data, addTransaction } = useFinance();
   const { t } = useLanguage();
+  const toast = useToast();
   const [form, setForm] = useState({
     type: 'expense',
     amount: '',
@@ -85,7 +87,9 @@ function AddTransactionForm() {
     setSaving(false);
     if (result) {
       setError(result);
+      return;
     }
+    toast.success(t('toast.transactionCreated'));
   }
 
   const transferBlocked = isTransfer && data.accounts.length < 2;

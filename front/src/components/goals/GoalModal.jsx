@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
 import { useLanguage } from '../../context/useLanguage.js';
+import { useToast } from '../../context/ToastProvider.jsx';
 import { formatMoney } from '../../utils/formatMoney.js';
 
 export default function GoalModal({ open, goal, onClose }) {
@@ -21,6 +22,7 @@ export default function GoalModal({ open, goal, onClose }) {
 function GoalForm({ goal, onClose }) {
   const { data, addGoal, updateGoal } = useFinance();
   const { t } = useLanguage();
+  const toast = useToast();
   const [title, setTitle] = useState(goal?.title || '');
   const [accountId, setAccountId] = useState(goal?.accountId ? String(goal.accountId) : '');
   const [current, setCurrent] = useState(goal?.accountId ? '0' : goal ? String(goal.current) : '0');
@@ -64,6 +66,7 @@ function GoalForm({ goal, onClose }) {
       setError(result);
       return;
     }
+    toast.success(t(isEdit ? 'toast.goalUpdated' : 'toast.goalCreated'));
     onClose();
   }
 

@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { CreditCard, Pencil, PiggyBank, Plus, Trash2 } from 'lucide-react';
 import { useFinance } from '../context/useFinance.js';
 import { useLanguage } from '../context/useLanguage.js';
+import { useToast } from '../context/ToastProvider.jsx';
 import { formatMoney } from '../utils/formatMoney.js';
 import AccountModal from '../components/accounts/AccountModal.jsx';
 
 export default function Accounts() {
   const { data, deleteAccount } = useFinance();
   const { t } = useLanguage();
+  const toast = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
 
@@ -26,7 +28,12 @@ export default function Accounts() {
   async function handleDelete(account) {
     const confirmed = window.confirm(t('accounts.deleteConfirm', { name: account.name }));
     if (!confirmed) return;
-    await deleteAccount(account.id);
+    const result = await deleteAccount(account.id);
+    if (result) {
+      toast.error(result || t('toast.actionFailed'));
+      return;
+    }
+    toast.success(t('toast.accountDeleted'));
   }
 
   return (

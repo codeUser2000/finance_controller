@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useFinance } from '../context/useFinance.js';
 import { useLanguage } from '../context/useLanguage.js';
+import { useToast } from '../context/ToastProvider.jsx';
 import { formatMoney, getBudgetTone } from '../utils/formatMoney.js';
 import CategoryIcon from '../components/shared/CategoryIcon.jsx';
 import ProgressBar from '../components/shared/ProgressBar.jsx';
@@ -42,6 +43,7 @@ export default function Budget() {
     deleteBudgetItem,
   } = useFinance();
   const { t } = useLanguage();
+  const toast = useToast();
   const [editing, setEditing] = useState(null);
   const [addingCategory, setAddingCategory] = useState(false);
   const [addingBudgetItem, setAddingBudgetItem] = useState(false);
@@ -49,12 +51,22 @@ export default function Budget() {
   const budgetItems = data.categories.filter((category) => category.budgetItemId);
 
   async function handleToggleCategory(category) {
-    await setCategoryActive(category.id, !category.isActive);
+    const result = await setCategoryActive(category.id, !category.isActive);
+    if (result) {
+      toast.error(result || t('toast.actionFailed'));
+      return;
+    }
+    toast.success(t('toast.categoryUpdated'));
   }
 
   async function handleToggleBudget(category) {
     if (!category.budgetItemId) return;
-    await setBudgetItemActive(category.budgetItemId, !category.budgetActive);
+    const result = await setBudgetItemActive(category.budgetItemId, !category.budgetActive);
+    if (result) {
+      toast.error(result || t('toast.actionFailed'));
+      return;
+    }
+    toast.success(t('toast.budgetUpdated'));
   }
 
   async function handleDeleteBudget(category) {
@@ -63,7 +75,12 @@ export default function Budget() {
       t('budget.deleteBudgetForeverConfirm', { name: category.name }),
     );
     if (!confirmed) return;
-    await deleteBudgetItem(category.budgetItemId);
+    const result = await deleteBudgetItem(category.budgetItemId);
+    if (result) {
+      toast.error(result || t('toast.actionFailed'));
+      return;
+    }
+    toast.success(t('toast.budgetDeleted'));
   }
 
   async function handleDeleteCategory(category) {
@@ -71,7 +88,12 @@ export default function Budget() {
       t('budget.deleteForeverConfirm', { name: category.name }),
     );
     if (!confirmed) return;
-    await deleteCategory(category.id);
+    const result = await deleteCategory(category.id);
+    if (result) {
+      toast.error(result || t('toast.actionFailed'));
+      return;
+    }
+    toast.success(t('toast.categoryDeleted'));
   }
 
   return (

@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageProvider.jsx';
+import { ToastProvider } from './context/ToastProvider.jsx';
 import { AuthProvider } from './context/AuthProvider.jsx';
 import ProtectedLayout from './components/layout/ProtectedLayout.jsx';
 import Dashboard from './pages/Dashboard.jsx';
@@ -16,21 +17,23 @@ export default function App() {
   return (
     <BrowserRouter>
       <LanguageProvider>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route element={<ProtectedLayout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/budget" element={<Budget />} />
-              <Route path="/goals" element={<Goals />} />
-              <Route path="/accounts" element={<Accounts />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route element={<ProtectedLayout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/transactions" element={<Transactions />} />
+                <Route path="/budget" element={<Budget />} />
+                <Route path="/goals" element={<Goals />} />
+                <Route path="/accounts" element={<Accounts />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </AuthProvider>
+        </ToastProvider>
       </LanguageProvider>
     </BrowserRouter>
   );

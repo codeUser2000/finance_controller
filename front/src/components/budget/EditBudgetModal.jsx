@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
 import { useLanguage } from '../../context/useLanguage.js';
+import { useToast } from '../../context/ToastProvider.jsx';
 
 export default function EditBudgetModal({ category, onClose }) {
   if (!category) return null;
@@ -14,6 +15,7 @@ export default function EditBudgetModal({ category, onClose }) {
 function EditBudgetForm({ category, onClose }) {
   const { updateCategoryBudget } = useFinance();
   const { t } = useLanguage();
+  const toast = useToast();
   const [budget, setBudget] = useState(category.budget);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -27,6 +29,7 @@ function EditBudgetForm({ category, onClose }) {
       setError(result);
       return;
     }
+    toast.success(t('toast.budgetUpdated'));
     onClose();
   }
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../shared/Modal.jsx';
 import { useFinance } from '../../context/useFinance.js';
 import { useLanguage } from '../../context/useLanguage.js';
+import { useToast } from '../../context/ToastProvider.jsx';
 
 export default function AddCategoryModal({ open, onClose }) {
   const { t } = useLanguage();
@@ -16,6 +17,7 @@ export default function AddCategoryModal({ open, onClose }) {
 function AddCategoryForm({ onClose }) {
   const { addCategory } = useFinance();
   const { t } = useLanguage();
+  const toast = useToast();
   const [name, setName] = useState('');
   const [type, setType] = useState('expense');
   const [error, setError] = useState('');
@@ -30,6 +32,7 @@ function AddCategoryForm({ onClose }) {
       setError(result);
       return;
     }
+    toast.success(t('toast.categoryCreated'));
     onClose();
   }
 
