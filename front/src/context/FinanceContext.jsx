@@ -74,8 +74,9 @@ function mergeCategories(apiCategories, budgetItems, transactions, month, year) 
 }
 
 function isTracked(category) {
+  if (category.type !== 'expense') return false;
   if (!category.isActive) return false;
-  if (category.budgetItemId && !category.budgetActive) return false;
+  if (!category.budgetItemId || !category.budgetActive) return false;
   return true;
 }
 
@@ -204,6 +205,7 @@ export function FinanceProvider({ children }) {
 
     const category = categories.find((item) => String(item.id) === String(categoryId));
     if (!category) return t('errors.chooseCategory');
+    if (category.type !== 'expense') return t('errors.chooseCategory');
 
     try {
       if (category.budgetItemId) {
@@ -295,6 +297,11 @@ export function FinanceProvider({ children }) {
           type: 'expense',
         });
         nextCategoryId = created.id;
+      } else {
+        const existing = categories.find((item) => String(item.id) === String(nextCategoryId));
+        if (!existing || existing.type !== 'expense') {
+          return t('errors.chooseCategory');
+        }
       }
 
       const existing = categories.find((item) => String(item.id) === String(nextCategoryId));
