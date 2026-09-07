@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageProvider.jsx';
 import { ToastProvider } from './context/ToastProvider.jsx';
 import { AuthProvider } from './context/AuthProvider.jsx';
@@ -25,7 +25,8 @@ export default function App() {
               <Route element={<ProtectedLayout />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/transactions" element={<Transactions />} />
-                <Route path="/budget" element={<Budget />} />
+                <Route path="/spendings" element={<Budget />} />
+                <Route path="/budget" element={<Navigate to="/spendings" replace />} />
                 <Route path="/goals" element={<Goals />} />
                 <Route path="/accounts" element={<Accounts />} />
                 <Route path="/profile" element={<Profile />} />

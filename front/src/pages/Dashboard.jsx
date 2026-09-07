@@ -28,7 +28,7 @@ export default function Dashboard() {
       <section className="section">
         <div className="section-header">
           <h2 className="section-title">{t('dashboard.monthlyBudget')}</h2>
-          <Link to="/budget" className="section-link">
+          <Link to="/spendings" className="section-link">
             {t('dashboard.viewAll')}
           </Link>
         </div>

@@ -10,7 +10,7 @@ export default function MobileNav() {
   const links = [
     { to: '/', label: t('nav.home'), icon: Home, end: true },
     { to: '/transactions', label: t('nav.transactions'), icon: ArrowLeftRight },
-    { to: '/budget', label: t('nav.budget'), icon: Wallet },
+    { to: '/spendings', label: t('nav.budget'), icon: Wallet },
     { to: '/goals', label: t('nav.goals'), icon: Target },
   ];
 

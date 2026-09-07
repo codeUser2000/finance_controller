@@ -21,7 +21,7 @@ export const translations = {
     nav: {
       home: 'Գլխավոր',
       transactions: 'Գործարքներ',
-      budget: 'Բյուջե',
+      budget: 'Ծախսեր',
       goals: 'Նպատակներ',
       accounts: 'Հաշիվներ',
       add: 'Ավելացնել',
@@ -34,9 +34,9 @@ export const translations = {
       evening: 'Բարի երեկո',
     },
     dashboard: {
-      monthlyBudget: 'Ամսական բյուջե',
+      monthlyBudget: 'Ամսական ծախսեր',
       viewAll: 'Տեսնել բոլորը',
-      noCategories: 'Դեռ կատեգորիաներ չկան։ Ավելացրեք Բյուջե էջում։',
+      noCategories: 'Դեռ կատեգորիաներ չկան։ Ավելացրեք Ծախսեր էջում։',
       savingsAccounts: 'Խնայողական հաշիվներ',
       viewAccounts: 'Հաշիվներ',
       noSavings: 'Դեռ խնայողական հաշիվներ չկան։',
@@ -71,7 +71,7 @@ export const translations = {
       transferBetween: '{from} → {to}',
     },
     budget: {
-      title: 'Բյուջե',
+      title: 'Ծախսեր',
       subtitle: 'Ամսական ծախսերի սահմաններ։ Սա խնայողություն չէ։',
       add: 'Ավելացնել',
       category: 'Կատեգորիա',
@@ -322,7 +322,7 @@ export const translations = {
     nav: {
       home: 'Главная',
       transactions: 'Операции',
-      budget: 'Бюджет',
+      budget: 'Расходы',
       goals: 'Цели',
       accounts: 'Счета',
       add: 'Добавить',
@@ -335,9 +335,9 @@ export const translations = {
       evening: 'Добрый вечер',
     },
     dashboard: {
-      monthlyBudget: 'Месячный бюджет',
+      monthlyBudget: 'Месячные расходы',
       viewAll: 'Все',
-      noCategories: 'Категорий пока нет. Добавьте на странице Бюджет.',
+      noCategories: 'Категорий пока нет. Добавьте на странице Расходы.',
       savingsAccounts: 'Накопительные счета',
       viewAccounts: 'Счета',
       noSavings: 'Накопительных счетов пока нет.',
@@ -372,7 +372,7 @@ export const translations = {
       transferBetween: '{from} → {to}',
     },
     budget: {
-      title: 'Бюджет',
+      title: 'Расходы',
       subtitle: 'Лимиты трат на месяц. Это не накопления.',
       add: 'Добавить',
       category: 'Категория',
@@ -623,7 +623,7 @@ export const translations = {
     nav: {
       home: 'Home',
       transactions: 'Transactions',
-      budget: 'Budget',
+      budget: 'Spendings',
       goals: 'Goals',
       accounts: 'Accounts',
       add: 'Add',
@@ -636,9 +636,9 @@ export const translations = {
       evening: 'Good evening',
     },
     dashboard: {
-      monthlyBudget: 'Monthly budget',
+      monthlyBudget: 'Monthly spendings',
       viewAll: 'View all',
-      noCategories: 'No categories yet. Add one from Budget.',
+      noCategories: 'No categories yet. Add one from Spendings.',
       savingsAccounts: 'Savings accounts',
       viewAccounts: 'View accounts',
       noSavings: 'No savings accounts yet.',
@@ -673,7 +673,7 @@ export const translations = {
       transferBetween: '{from} → {to}',
     },
     budget: {
-      title: 'Budget',
+      title: 'Spendings',
       subtitle: 'Monthly spending limits. This is not the same as your savings.',
       add: 'Add',
       category: 'Category',
