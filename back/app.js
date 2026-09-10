@@ -15,6 +15,7 @@ import budgetsRouter from './routes/budgets.js';
 import transactionsRouter from './routes/transactions.js';
 import authRouter from './routes/auth.js';
 import goalsRouter from './routes/goals.js';
+import { apiLimiter } from './middleware/rateLimit.js';
 
 dotenv.config();
 
@@ -22,6 +23,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// Trust the first reverse proxy (nginx) so rate limits use the real client IP.
+app.set('trust proxy', 1);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -36,6 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/api', apiLimiter);
 app.use('/api/auth', authRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/accounts', accountsRouter);
