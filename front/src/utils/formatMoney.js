@@ -1,6 +1,8 @@
 export function formatMoney(amount) {
   const value = Number(amount) || 0;
-  return `${Math.abs(value).toLocaleString('en-US')} AMD`;
+  const formatted = Math.abs(value).toLocaleString('en-US');
+  if (value < 0) return `−${formatted} AMD`;
+  return `${formatted} AMD`;
 }
 
 export function formatSignedMoney(amount, type) {

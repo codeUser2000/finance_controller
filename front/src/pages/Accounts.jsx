@@ -85,7 +85,13 @@ export default function Accounts() {
                   </span>
                 </div>
                 <p className="card-name">{account.name}</p>
-                <p className="account-balance amount">{formatMoney(account.balance)}</p>
+                <p
+                  className={`account-balance amount ${
+                    account.balance < 0 ? 'amount-danger' : ''
+                  }`}
+                >
+                  {formatMoney(account.balance)}
+                </p>
                 <p className="card-meta">{account.currency || 'AMD'}</p>
                 <span className={`account-kind ${isSavings ? 'is-savings' : ''}`}>
                   {typeLabel(account.type)}
